@@ -1,0 +1,17 @@
+﻿@{
+    ViewData["Title"] = "Bảng điều khiển";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<script>
+    // Chuyển hướng đến trang Thống kê
+    window.location.href = '@Url.Action("Statistics", "Admin", new { tab = "tours" })';
+</script>
+
+<div style="text-align: center; padding: 50px;">
+    <h2>Đang chuyển hướng...</h2>
+    <p>
+        Nếu không tự động chuyển,
+        <a href="@Url.Action("Statistics", "Admin")">bấm vào đây</a>.
+    </p>
+</div>

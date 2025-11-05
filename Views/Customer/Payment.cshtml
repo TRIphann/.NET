@@ -1,0 +1,192 @@
+﻿@model QLDuLichRBAC_Upgrade.Models.ViewModels.PaymentViewModel
+
+@{
+    ViewData["Title"] = "Thanh toán Tour";
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/payment-page.css" />
+
+<div class="content-header">
+    <h1><i class="fas fa-credit-card"></i> Thanh toán Tour</h1>
+</div>
+
+<div class="payment-container">
+    <div class="payment-layout">
+        <!-- Thông tin tour -->
+        <div class="payment-section">
+            <div class="section-card">
+                <h3><i class="fas fa-map-marked-alt"></i> Thông tin chuyến đi</h3>
+                <h2 class="tour-name">@Model.TenTour</h2>
+
+                <div class="payment-details">
+                    <div class="detail-row">
+                        <span class="label"><i class="fas fa-ticket-alt"></i> Số lượng vé:</span>
+                        <span class="value">@Model.SoLuongVe vé</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label"><i class="fas fa-dollar-sign"></i> Giá tour (1 vé):</span>
+                        <span class="value">@Model.GiaTour.ToString("N0") ₫</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label"><i class="fas fa-calculator"></i> Tổng giá vé:</span>
+                        <span class="value">@((Model.GiaTour * Model.SoLuongVe).ToString("N0")) ₫</span>
+                    </div>
+
+                    @if (Model.DichVuDaChon != null && Model.DichVuDaChon.Any())
+                    {
+                    <div class="detail-row">
+                        <span class="label"><i class="fas fa-concierge-bell"></i> Dịch vụ đã chọn:</span>
+                        <span class="value"></span>
+                    </div>
+                    <div class="services-list">
+                        @foreach (var dv in Model.DichVuDaChon)
+                            {
+                        <div class="service-detail">
+                            <span>• @dv.TenDV</span>
+                            <span>@dv.DonGia.ToString("N0") ₫</span>
+                        </div>
+                            }
+                    </div>
+                    }
+
+                    <div class="detail-row total-row">
+                        <span class="label"><strong><i class="fas fa-money-bill-wave"></i> Tổng thanh toán:</strong></span>
+                        <span class="value total-amount">@Model.TongTien.ToString("N0") ₫</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Code và hướng dẫn -->
+        <div class="payment-section">
+            <div class="section-card qr-section">
+                <h3><i class="fas fa-qrcode"></i> Quét mã QR để thanh toán</h3>
+
+                <div class="qr-code-container">
+                    <img src="data:image/png;base64,@Model.QRCodeBase64" alt="QR Code" class="qr-code-image" />
+                </div>
+
+                <div class="transaction-info">
+                    <div class="info-box">
+                        <i class="fas fa-hashtag"></i>
+                        <div>
+                            <div class="info-label">Mã giao dịch</div>
+                            <div class="info-value">@Model.MaGiaoDich</div>
+                        </div>
+                    </div>
+                    <div class="info-box">
+                        <i class="fas fa-wallet"></i>
+                        <div>
+                            <div class="info-label">Số tiền</div>
+                            <div class="info-value">@Model.TongTien.ToString("N0") ₫</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="payment-instructions">
+                    <h4><i class="fas fa-info-circle"></i> Hướng dẫn thanh toán</h4>
+                    <ol>
+                        <li>Mở ứng dụng Mobile Banking của bạn</li>
+                        <li>Quét mã QR code ở trên</li>
+                        <li>Kiểm tra thông tin và xác nhận thanh toán</li>
+                        <li>Hệ thống sẽ tự động xác nhận sau khi nhận được tiền</li>
+                    </ol>
+                </div>
+
+                <div class="payment-status">
+                    <div id="statusMessage" class="status-checking">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Đang chờ thanh toán...</span>
+                    </div>
+                </div>
+
+                <div class="payment-actions">
+                    <button type="button" id="checkPaymentBtn" class="btn-check-payment">
+                        <i class="fas fa-sync-alt"></i> Kiểm tra thanh toán
+                    </button>
+                    <a href="@Url.Action("RegisterTour", "Customer")" class="btn-cancel">
+                        <i class="fas fa-times"></i> Hủy
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    let checkInterval;
+    const maGiaoDich = '@Model.MaGiaoDich';
+    const tongTien = @Model.TongTien;
+    const tourId = @Model.MaTour;
+    const soLuongVe = @Model.SoLuongVe;
+    const dichVuIds = '@string.Join(",", Model.DichVuDaChon?.Select(d => d.MaDV) ?? new List<int>())';
+
+    // Tự động kiểm tra mỗi 5 giây
+    checkInterval = setInterval(checkPaymentStatus, 5000);
+
+    // Kiểm tra ngay khi load trang
+    setTimeout(checkPaymentStatus, 1000);
+
+    $('#checkPaymentBtn').click(function() {
+        checkPaymentStatus();
+    });
+
+    function checkPaymentStatus() {
+        $.ajax({
+            url: '@Url.Action("CheckPaymentStatus", "Customer")',
+            type: 'POST',
+            data: {
+                maGiaoDich: maGiaoDich,
+                tongTien: tongTien
+            },
+            success: function(response) {
+                if (response.isSuccess) {
+                    clearInterval(checkInterval);
+
+                    $('#statusMessage').removeClass('status-checking').addClass('status-success');
+                    $('#statusMessage').html('<i class="fas fa-check-circle"></i> <span>Thanh toán thành công!</span>');
+
+                    // Tự động confirm và chuyển trang
+                    setTimeout(function() {
+                        confirmPayment();
+                    }, 1500);
+                } else {
+                    $('#statusMessage').removeClass('status-success').addClass('status-checking');
+                    $('#statusMessage').html('<i class="fas fa-spinner fa-spin"></i> <span>' + response.message + '</span>');
+                }
+            },
+            error: function() {
+                $('#statusMessage').removeClass('status-success').addClass('status-error');
+                $('#statusMessage').html('<i class="fas fa-exclamation-circle"></i> <span>Lỗi kiểm tra thanh toán</span>');
+            }
+        });
+    }
+
+    function confirmPayment() {
+        $.ajax({
+            url: '@Url.Action("ConfirmPayment", "Customer")',
+            type: 'POST',
+            data: {
+                tourId: tourId,
+                soLuongVe: soLuongVe,
+                dichVuIds: dichVuIds
+            },
+            success: function() {
+                window.location.href = '@Url.Action("PaidTours", "Customer")';
+            },
+            error: function() {
+                alert('Có lỗi xảy ra khi xác nhận thanh toán!');
+            }
+        });
+    }
+
+    // Dừng kiểm tra khi rời trang
+    window.addEventListener('beforeunload', function() {
+        if (checkInterval) {
+            clearInterval(checkInterval);
+        }
+    });
+    </script>
+}

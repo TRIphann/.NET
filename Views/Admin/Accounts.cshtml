@@ -1,0 +1,465 @@
+﻿@{
+    ViewData["Title"] = "Quản lý tài khoản";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var currentTab = ViewBag.CurrentTab ?? "employees";
+    var employees = ViewBag.Employees;
+    var customers = ViewBag.Customers;
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+}
+
+<h1><i class="fas fa-users-cog"></i> Quản lý tài khoản</h1>
+
+<!-- Top Navigation -->
+<div class="top-nav">
+    <ul>
+        <li>
+            <a href="@Url.Action("Accounts", new { tab = "employees", page = 1 })"
+               class="@(currentTab == "employees" ? "active" : "")">
+                <i class="fas fa-user-tie"></i> Nhân viên
+            </a>
+        </li>
+        <li>
+            <a href="@Url.Action("Accounts", new { tab = "customers", page = 1 })"
+               class="@(currentTab == "customers" ? "active" : "")">
+                <i class="fas fa-users"></i> Khách hàng
+            </a>
+        </li>
+    </ul>
+</div>
+
+@if (currentTab == "employees")
+{
+    <!-- QUẢN LÝ NHÂN VIÊN -->
+<div style="margin-bottom: 20px;">
+    <button class="btn btn-primary" onclick="openCreateEmployeeModal()">
+        <i class="fas fa-plus"></i> Tạo tài khoản nhân viên
+    </button>
+</div>
+
+<div class="table-container">
+    <h3><i class="fas fa-table"></i> Danh sách nhân viên (Trang @currentPage/@totalPages)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Avatar</th>
+                <th>Mã NV</th>
+                <th>Tên nhân viên</th>
+                <th>Giới tính</th>
+                <th>SĐT</th>
+                <th>Username</th>
+                <th>Số tour</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody id="employeeTableBody">
+            @foreach (var emp in employees)
+            {
+            <tr>
+                <td>
+                    <img src="~/@(emp.AnhDaiDien ?? "images/avatars/default.jpg")"
+                         alt="@emp.TenNV"
+                         class="avatar-small"
+                         loading="lazy"
+                         onerror="this.src='/images/avatars/default.jpg'" />
+                </td>
+                <td>#@emp.MaNV</td>
+                <td>@emp.TenNV</td>
+                <td>@emp.GioiTinh</td>
+                <td>@emp.SDT</td>
+                <td>@(emp.Username ?? "N/A")</td>
+                <td>@emp.SoTour</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="viewEmployeeDetail(@emp.MaNV)">
+                        <i class="fas fa-eye"></i> Xem
+                    </button>
+                    @if (emp.UserId != null)
+                    {
+                    <button class="btn btn-sm btn-danger" onclick="deleteAccount(@emp.UserId)">
+                        <i class="fas fa-trash"></i> Xóa
+                    </button>
+                    }
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (totalPages > 1)
+    {
+        <div class="pagination-container">
+            @if (currentPage > 1)
+            {
+                <a href="@Url.Action("Accounts", new { tab = "employees", page = currentPage - 1 })" class="btn btn-sm">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+            }
+
+            <span class="page-info">Trang @currentPage / @totalPages</span>
+
+            @if (currentPage < totalPages)
+            {
+                <a href="@Url.Action("Accounts", new { tab = "employees", page = currentPage + 1 })" class="btn btn-sm">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+            }
+        </div>
+    }
+</div>
+}
+else if (currentTab == "customers")
+{
+ <!-- QUẢN LÝ KHÁCH HÀNG -->
+<div class="table-container">
+    <h3><i class="fas fa-table"></i> Danh sách khách hàng (Trang @currentPage/@totalPages)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Avatar</th>
+                <th>Mã KH</th>
+                <th>Tên khách hàng</th>
+                <th>Giới tính</th>
+                <th>SĐT</th>
+                <th>Username</th>
+                <th>Số tour</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody id="customerTableBody">
+            @foreach (var cust in customers)
+            {
+            <tr>
+                <td>
+                    <img src="~/@(cust.AnhDaiDien ?? "images/avatars/default.jpg")"
+                         alt="@cust.TenKH"
+                         class="avatar-small"
+                         loading="lazy"
+                         onerror="this.src='/images/avatars/default.jpg'" />
+                </td>
+                <td>#@cust.MaKH</td>
+                <td>@cust.TenKH</td>
+                <td>@cust.GioiTinh</td>
+                <td>@cust.SDT</td>
+                <td>@(cust.Username ?? "N/A")</td>
+                <td>@cust.SoTour</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="viewCustomerDetail(@cust.MaKH)">
+                        <i class="fas fa-eye"></i> Xem
+                    </button>
+                    @if (cust.UserId != null)
+                    {
+                    <button class="btn btn-sm btn-danger" onclick="deleteAccount(@cust.UserId)">
+                        <i class="fas fa-trash"></i> Xóa
+                    </button>
+                    }
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (totalPages > 1)
+    {
+        <div class="pagination-container">
+            @if (currentPage > 1)
+            {
+                <a href="@Url.Action("Accounts", new { tab = "customers", page = currentPage - 1 })" class="btn btn-sm">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+            }
+
+            <span class="page-info">Trang @currentPage / @totalPages</span>
+
+            @if (currentPage < totalPages)
+            {
+                <a href="@Url.Action("Accounts", new { tab = "customers", page = currentPage + 1 })" class="btn btn-sm">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+            }
+        </div>
+    }
+</div>
+}
+
+<!-- Modal Tạo tài khoản nhân viên -->
+<div id="createEmployeeModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user-plus"></i> Tạo tài khoản nhân viên</h2>
+            <span class="close" onclick="closeCreateEmployeeModal()">&times;</span>
+        </div>
+        <form id="createEmployeeForm">
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Tên nhân viên:</label>
+                <input type="text" name="tenNV" class="form-control" required />
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-venus-mars"></i> Giới tính:</label>
+                <select name="gioiTinh" class="form-control" required>
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-phone"></i> Số điện thoại:</label>
+                <input type="tel" name="sdt" class="form-control" required />
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-map-marker-alt"></i> Địa chỉ:</label>
+                <input type="text" name="diaChi" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-user-circle"></i> Username:</label>
+                <input type="text" name="username" class="form-control" required />
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Password:</label>
+                <input type="password" name="password" class="form-control" required />
+            </div>
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-save"></i> Tạo tài khoản
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Chi tiết nhân viên -->
+<div id="employeeDetailModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user-tie"></i> Chi tiết nhân viên</h2>
+            <span class="close" onclick="closeEmployeeDetailModal()">&times;</span>
+        </div>
+        <div id="employeeDetailContent"></div>
+    </div>
+</div>
+
+<!-- Modal Chi tiết khách hàng -->
+<div id="customerDetailModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user"></i> Chi tiết khách hàng</h2>
+            <span class="close" onclick="closeCustomerDetailModal()">&times;</span>
+        </div>
+        <div id="customerDetailContent"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    // Tạo tài khoản nhân viên
+    function openCreateEmployeeModal() {
+        document.getElementById('createEmployeeModal').style.display = 'block';
+    }
+
+    function closeCreateEmployeeModal() {
+        document.getElementById('createEmployeeModal').style.display = 'none';
+        document.getElementById('createEmployeeForm').reset();
+    }
+
+    document.getElementById('createEmployeeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+
+        $.ajax({
+            url: '@Url.Action("CreateEmployeeAccount", "Admin")',
+            type: 'POST',
+            data: data,
+            success: function(result) {
+                if (result.success) {
+                    alert(result.message);
+                    closeCreateEmployeeModal();
+                    location.reload();
+                } else {
+                    alert(result.message);
+                }
+            },
+            error: function() {
+                alert('Có lỗi xảy ra!');
+            }
+        });
+    });
+
+    // Xem chi tiết nhân viên (AJAX)
+    function viewEmployeeDetail(maNV) {
+        const modalContent = document.getElementById('employeeDetailContent');
+        modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin fa-3x"></i><p style="margin-top:20px;">Đang tải...</p></div>';
+        document.getElementById('employeeDetailModal').style.display = 'block';
+
+        $.ajax({
+            url: '@Url.Action("GetEmployeeDetail", "Admin")',
+            type: 'GET',
+            data: { id: maNV },
+            success: function(result) {
+                if (result.success) {
+                    const empData = result.data;
+                    
+                    let toursHtml = '<h4 style="margin-top: 20px;"><i class="fas fa-map-marked-alt"></i> Các tour đã đăng ký:</h4>';
+                    if (empData.tours && empData.tours.length > 0) {
+                        toursHtml += '<table style="width: 100%; margin-top: 10px;"><thead><tr><th>Tên tour</th><th>Ngày khởi hành</th><th>Giá</th></tr></thead><tbody>';
+                        empData.tours.forEach(tour => {
+                            const ngayKH = new Date(tour.ngayBatDau).toLocaleDateString('vi-VN');
+                            toursHtml += `<tr><td>${tour.tenTour}</td><td>${ngayKH}</td><td>${tour.gia.toLocaleString('vi-VN')} ₫</td></tr>`;
+                        });
+                        toursHtml += '</tbody></table>';
+                    } else {
+                        toursHtml += '<p>Chưa đăng ký tour nào</p>';
+                    }
+
+                    const html = `
+                        <div class="detail-card">
+                            <div class="detail-header">
+                                <img src="/images/${empData.anhDaiDien || 'avatars/default.jpg'}"
+                                     alt="${empData.tenNV}"
+                                     class="detail-avatar"
+                                     onerror="this.src='/images/avatars/default.jpg'" />
+                                <div class="detail-info">
+                                    <h2>${empData.tenNV}</h2>
+                                    <p><i class="fas fa-briefcase"></i> ${empData.vaiTro || 'Hướng dẫn viên'}</p>
+                                    <p><i class="fas fa-user-circle"></i> Username: ${empData.username || 'N/A'}</p>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label"><i class="fas fa-venus-mars"></i> Giới tính:</span>
+                                <span class="info-value">${empData.gioiTinh}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label"><i class="fas fa-phone"></i> Số điện thoại:</span>
+                                <span class="info-value">${empData.sdt}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label"><i class="fas fa-map-marker-alt"></i> Địa chỉ:</span>
+                                <span class="info-value">${empData.diaChi || 'N/A'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label"><i class="fas fa-list"></i> Số tour:</span>
+                                <span class="info-value">${empData.soTour}</span>
+                            </div>
+                            ${toursHtml}
+                        </div>
+                    `;
+
+                    modalContent.innerHTML = html;
+                } else {
+                    modalContent.innerHTML = `<div class="alert alert-error">${result.message}</div>`;
+                }
+            },
+            error: function() {
+                modalContent.innerHTML = '<div class="alert alert-error">Có lỗi xảy ra khi tải dữ liệu!</div>';
+            }
+        });
+    }
+
+    function closeEmployeeDetailModal() {
+        document.getElementById('employeeDetailModal').style.display = 'none';
+    }
+
+    // Xem chi tiết khách hàng (AJAX)
+    function viewCustomerDetail(maKH) {
+        const modalContent = document.getElementById('customerDetailContent');
+        modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin fa-3x"></i><p style="margin-top:20px;">Đang tải...</p></div>';
+        document.getElementById('customerDetailModal').style.display = 'block';
+
+        $.ajax({
+            url: '@Url.Action("GetCustomerDetail", "Admin")',
+            type: 'GET',
+            data: { id: maKH },
+            success: function(result) {
+                if (result.success) {
+                    const custData = result.data;
+                    
+                    let toursHtml = '<h4 style="margin-top: 20px;"><i class="fas fa-map-marked-alt"></i> Các tour đã đăng ký:</h4>';
+                    if (custData.tours && custData.tours.length > 0) {
+                        toursHtml += '<table style="width: 100%; margin-top: 10px;"><thead><tr><th>Tên tour</th><th>Ngày khởi hành</th><th>Số vé</th><th>Giá</th></tr></thead><tbody>';
+                        custData.tours.forEach(tour => {
+                            const ngayKH = new Date(tour.ngayBatDau).toLocaleDateString('vi-VN');
+                            toursHtml += `<tr><td>${tour.tenTour}</td><td>${ngayKH}</td><td>${tour.soLuongVe}</td><td>${tour.gia.toLocaleString('vi-VN')} ₫</td></tr>`;
+                        });
+                        toursHtml += '</tbody></table>';
+                    } else {
+                        toursHtml += '<p>Chưa đăng ký tour nào</p>';
+                    }
+
+                    const html = `
+                        <div class="detail-card">
+                            <div class="detail-header">
+                                <img src="/images/${custData.anhDaiDien || 'avatars/default.jpg'}"
+                                     alt="${custData.tenKH}"
+                                     class="detail-avatar"
+                                     onerror="this.src='/images/avatars/default.jpg'" />
+                                <div class="detail-info">
+                                    <h2>${custData.tenKH}</h2>
+                                    <p><i class="fas fa-user-circle"></i> Username: ${custData.username || 'N/A'}</p>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label"><i class="fas fa-venus-mars"></i> Giới tính:</span>
+                                <span class="info-value">${custData.gioiTinh}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label"><i class="fas fa-phone"></i> Số điện thoại:</span>
+                                <span class="info-value">${custData.sdt}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label"><i class="fas fa-map-marker-alt"></i> Địa chỉ:</span>
+                                <span class="info-value">${custData.diaChi || 'N/A'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label"><i class="fas fa-list"></i> Số tour:</span>
+                                <span class="info-value">${custData.soTour}</span>
+                            </div>
+                            ${toursHtml}
+                        </div>
+                    `;
+
+                    modalContent.innerHTML = html;
+                } else {
+                    modalContent.innerHTML = `<div class="alert alert-error">${result.message}</div>`;
+                }
+            },
+            error: function() {
+                modalContent.innerHTML = '<div class="alert alert-error">Có lỗi xảy ra khi tải dữ liệu!</div>';
+            }
+        });
+    }
+
+    function closeCustomerDetailModal() {
+        document.getElementById('customerDetailModal').style.display = 'none';
+    }
+
+    // Xóa tài khoản
+    function deleteAccount(userId) {
+        if (!confirm('Bạn có chắc muốn xóa tài khoản này?')) return;
+
+        $.ajax({
+            url: '@Url.Action("DeleteAccount", "Admin")',
+            type: 'POST',
+            data: { userId: userId },
+            success: function(result) {
+                if (result.success) {
+                    alert(result.message);
+                    location.reload();
+                } else {
+                    alert(result.message);
+                }
+            },
+            error: function() {
+                alert('Có lỗi xảy ra!');
+            }
+        });
+    }
+
+    // Đóng modal khi click ngoài
+    window.onclick = function(event) {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+    </script>
+}

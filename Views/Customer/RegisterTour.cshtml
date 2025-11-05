@@ -1,0 +1,412 @@
+﻿@model IEnumerable<QLDuLichRBAC_Upgrade.Models.Entities.Tour>
+
+@{
+    ViewData["Title"] = "Đăng ký Tour";
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+}
+
+<div class="content-header">
+    <h1><i class="fas fa-map-marked-alt"></i> Danh sách Tour Du Lịch</h1>
+</div>
+
+<div class="tour-grid">
+    @if (Model != null && Model.Any())
+    {
+        @foreach (var tour in Model)
+        {
+            var imagePath = tour.Tour_Anh?.FirstOrDefault()?.DuongDan ?? "default.jpg";
+            var guide = tour.NhanVien_Tour?.FirstOrDefault()?.NhanVien;
+            <div class="tour-card-new">
+                <div class="tour-card-image">
+                    <img src="~/images/@imagePath" 
+                         alt="@tour.TenTour" 
+                         style="width: 100%; height: 100%; object-fit: cover;"
+                         onload="this.parentElement.classList.add('loaded')"
+                         onerror="this.src='/images/default.jpg'" />
+                </div>
+                
+                <div class="tour-card-body">
+                    <h3 class="tour-card-title">@tour.TenTour</h3>
+                    
+                    <div class="tour-card-info">
+                        <i class="fas fa-calendar-alt"></i>
+                        <strong>Khởi hành:</strong> @tour.NgayBatDau.ToString("dd/MM/yyyy")
+                    </div>
+                    
+                    <div class="tour-card-info">
+                        <i class="fas fa-calendar-check"></i>
+                        <strong>Kết thúc:</strong> @tour.NgayKetThuc.ToString("dd/MM/yyyy")
+                    </div>
+                    
+                    <div class="tour-card-info">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <strong>Địa điểm:</strong>
+                        @if (tour.Tour_DiaDiem != null && tour.Tour_DiaDiem.Any())
+                        {
+                            @string.Join(", ", tour.Tour_DiaDiem.Take(2).Select(dd => dd.DiaDiem?.TenDD ?? "N/A"))
+                            @if (tour.Tour_DiaDiem.Count() > 2)
+                            {
+                                <span>...</span>
+                            }
+                        }
+                        else
+                        {
+                            <span>Chưa có thông tin</span>
+                        }
+                    </div>
+                    
+                    <div class="tour-card-info">
+                        <i class="fas fa-user-tie"></i>
+                        <strong>HDV:</strong>
+                        @if (guide != null)
+                        {
+                            @guide.TenNV
+                        }
+                        else
+                        {
+                            <span>Chưa phân công</span>
+                        }
+                    </div>
+                    
+                    <div class="tour-card-price">
+                        @tour.Gia.ToString("N0") ₫
+                    </div>
+                    
+                    <div class="tour-card-actions">
+                        <button type="button" class="btn-detail" onclick="showTourDetails(@tour.MaTour)">
+                            <i class="fas fa-info-circle"></i> Chi tiết
+                        </button>
+                        <button type="button" class="btn-pay" onclick="showPaymentModal(@tour.MaTour, '@tour.TenTour', @tour.Gia)">
+                            <i class="fas fa-credit-card"></i> Đặt tour
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div style="grid-column: 1 / -1;">
+            <div class="alert-custom alert-error">
+                <i class="fas fa-exclamation-triangle"></i> Hiện tại chưa có tour nào.
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modal Chi tiết Tour -->
+<div id="tourDetailModal" class="modal">
+    <div class="modal-content modal-large">
+        <span class="close" onclick="closeModal('tourDetailModal')">&times;</span>
+        <div id="tourDetailContent">
+            <div class="loading"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thanh toán -->
+<div id="paymentModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('paymentModal')">&times;</span>
+        <div id="paymentContent">
+            <h2><i class="fas fa-credit-card"></i> Thanh toán Tour</h2>
+            <form id="paymentForm">
+                <div class="payment-info">
+                    <h3 id="tourNameDisplay"></h3>
+                    <input type="hidden" id="tourIdInput" />
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-ticket-alt"></i> Số lượng vé:</label>
+                        <input type="number" id="ticketQuantity" min="1" value="1" onchange="updateTotalPrice()" class="form-control" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-concierge-bell"></i> Dịch vụ đi kèm:</label>
+                        <div id="servicesList"></div>
+                    </div>
+                    
+                    <div class="price-summary">
+                        <div class="price-row">
+                            <span>Giá tour:</span>
+                            <span id="tourPrice"></span>
+                        </div>
+                        <div class="price-row">
+                            <span>Số lượng vé:</span>
+                            <span id="ticketCount"></span>
+                        </div>
+                        <div class="price-row">
+                            <span>Dịch vụ:</span>
+                            <span id="servicePrice">0 ₫</span>
+                        </div>
+                        <div class="price-row total">
+                            <span><strong>Tổng cộng:</strong></span>
+                            <span id="totalPrice"><strong>0 ₫</strong></span>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn-confirm-payment" onclick="processPayment()">
+                        <i class="fas fa-check-circle"></i> Xác nhận thanh toán
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let currentTourPrice = 0;
+    let selectedServices = [];
+
+    function showTourDetails(tourId) {
+        const modal = document.getElementById('tourDetailModal');
+        const content = document.getElementById('tourDetailContent');
+        modal.style.display = 'block';
+        
+        content.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>';
+        
+        fetch(`/Customer/GetTourDetails?id=${tourId}`)
+            .then(response => response.json())
+            .then(data => {
+                content.innerHTML = renderTourDetails(data);
+            })
+            .catch(error => {
+                console.error('Error loading tour details:', error);
+                content.innerHTML = '<div class="alert-custom alert-error"><i class="fas fa-exclamation-circle"></i> Lỗi tải thông tin tour</div>';
+            });
+    }
+
+    function renderTourDetails(tour) {
+        let html = `
+            <div class="tour-detail-container">
+                <h2><i class="fas fa-map-marked-alt"></i> ${tour.tenTour}</h2>
+                
+                <div class="detail-section">
+                    <h3><i class="fas fa-info-circle"></i> Thông tin cơ bản</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <strong>Ngày bắt đầu:</strong> ${formatDate(tour.ngayBatDau)}
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-calendar-check"></i>
+                            <strong>Ngày kết thúc:</strong> ${formatDate(tour.ngayKetThuc)}
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-clock"></i>
+                            <strong>Thời gian:</strong> ${tour.soNgay} ngày ${tour.soDem} đêm
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-dollar-sign"></i>
+                            <strong>Giá:</strong> ${formatCurrency(tour.gia)}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3><i class="fas fa-user-tie"></i> Hướng dẫn viên</h3>
+                    ${tour.huongDanVien ? `
+                        <div class="guide-info">
+                            ${tour.huongDanVien.anhDaiDien ? `<img src="/images/${tour.huongDanVien.anhDaiDien}" alt="${tour.huongDanVien.tenNV}" class="guide-photo" />` : ''}
+                            <div class="guide-details">
+                                <h4>${tour.huongDanVien.tenNV}</h4>
+                                <p><i class="fas fa-phone"></i> ${tour.huongDanVien.sdt || 'Chưa cập nhật'}</p>
+                                <p><i class="fas fa-venus-mars"></i> ${tour.huongDanVien.gioiTinh}</p>
+                            </div>
+                        </div>
+                    ` : '<p>Chưa phân công hướng dẫn viên</p>'}
+                </div>
+
+                <div class="detail-section">
+                    <h3><i class="fas fa-map-marker-alt"></i> Địa điểm tham quan</h3>
+                    <div class="location-list">
+                        ${tour.diaDiems && tour.diaDiems.length > 0 ? 
+                            tour.diaDiems.map(dd => `
+                                <div class="location-item">
+                                    <i class="fas fa-map-pin"></i>
+                                    <strong>${dd.tenDD}</strong> - ${dd.tinh}
+                                </div>
+                            `).join('') 
+                            : '<p>Chưa có thông tin địa điểm</p>'}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3><i class="fas fa-route"></i> Lịch trình chi tiết</h3>
+                    <div class="itinerary-list">
+                        ${tour.lichTrinhs && tour.lichTrinhs.length > 0 ? 
+                            tour.lichTrinhs.map(lt => `
+                                <div class="itinerary-item">
+                                    <div class="day-badge">Ngày ${lt.ngayThu}</div>
+                                    <div class="itinerary-content">${lt.noiDung}</div>
+                                </div>
+                            `).join('') 
+                            : '<p>Chưa có lịch trình chi tiết</p>'}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3><i class="fas fa-bus"></i> Phương tiện di chuyển</h3>
+                    <div class="vehicle-list">
+                        ${tour.phuongTiens && tour.phuongTiens.length > 0 ? 
+                            tour.phuongTiens.map(pt => `
+                                <div class="vehicle-item">
+                                    <i class="fas fa-${getVehicleIcon(pt.loaiPT)}"></i>
+                                    <strong>${pt.tenPT}</strong> (${pt.loaiPT}, ${pt.soCho} chỗ)
+                                </div>
+                            `).join('') 
+                            : '<p>Chưa có thông tin phương tiện</p>'}
+                    </div>
+                </div>
+
+                ${tour.anhAlbum && tour.anhAlbum.length > 0 ? `
+                    <div class="detail-section">
+                        <h3><i class="fas fa-images"></i> Hình ảnh</h3>
+                        <div class="photo-gallery">
+                            ${tour.anhAlbum.map(anh => `
+                               <img src="/images/${anh.duongDan}" alt="Tour photo" class="gallery-photo" />
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-pay" onclick="closeModal('tourDetailModal'); showPaymentModal(${tour.maTour}, '${tour.tenTour}', ${tour.gia})">
+                        <i class="fas fa-credit-card"></i> Đặt tour ngay
+                    </button>
+                </div>
+            </div>
+        `;
+        return html;
+    }
+
+    function showPaymentModal(tourId, tourName, price) {
+        console.log('Opening payment modal:', { tourId, tourName, price });
+        currentTourPrice = price;
+        document.getElementById('tourIdInput').value = tourId;
+        document.getElementById('tourNameDisplay').textContent = tourName;
+        document.getElementById('tourPrice').textContent = formatCurrency(price);
+        document.getElementById('ticketCount').textContent = '1';
+        document.getElementById('ticketQuantity').value = 1;
+        
+        // Load services
+        loadServices();
+        updateTotalPrice();
+        
+        document.getElementById('paymentModal').style.display = 'block';
+    }
+
+    function loadServices() {
+        console.log('Loading services from API...');
+        const container = document.getElementById('servicesList');
+        
+        // Show loading state
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #667eea;"><i class="fas fa-spinner fa-spin"></i> Đang tải dịch vụ...</div>';
+        
+        fetch('/Customer/GetServices')
+            .then(response => {
+                console.log('GetServices response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(services => {
+                console.log('Services loaded:', services);
+                console.log('Number of services:', services ? services.length : 0);
+                
+                if (!services || services.length === 0) {
+                    container.innerHTML = `
+                        <div style="padding: 15px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; text-align: center;">
+                            <i class="fas fa-info-circle" style="color: #856404;"></i> 
+                            <span style="color: #856404;">Hiện tại chưa có dịch vụ đi kèm nào.</span>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = services.map(s => `
+                    <div class="service-item">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" value="${s.maDV}" data-price="${s.donGia}" onchange="updateTotalPrice()" 
+                                   style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;" />
+                            <span style="flex: 1;">
+                                <strong>${s.tenDV}</strong> - <span style="color: #667eea; font-weight: 600;">${formatCurrency(s.donGia)}</span>
+                                ${s.moTa ? `<br><small style="color: #666;">${s.moTa}</small>` : ''}
+                            </span>
+                        </label>
+                    </div>
+                `).join('');
+                
+                console.log('Services rendered successfully');
+            })
+            .catch(error => {
+                console.error('Error loading services:', error);
+                container.innerHTML = `
+                    <div style="padding: 15px; background: #f8d7da; border: 1px solid #dc3545; border-radius: 8px;">
+                        <i class="fas fa-exclamation-triangle" style="color: #721c24;"></i> 
+                        <strong style="color: #721c24;">Lỗi tải danh sách dịch vụ:</strong>
+                        <p style="margin: 5px 0 0 0; color: #721c24;">${error.message}</p>
+                        <small style="color: #721c24;">Vui lòng kiểm tra console để biết thêm chi tiết.</small>
+                    </div>
+                `;
+            });
+    }
+
+    function updateTotalPrice() {
+        const quantity = parseInt(document.getElementById('ticketQuantity').value) || 1;
+        document.getElementById('ticketCount').textContent = quantity;
+        
+        let serviceTotal = 0;
+        document.querySelectorAll('#servicesList input[type="checkbox"]:checked').forEach(cb => {
+            serviceTotal += parseFloat(cb.dataset.price) || 0;
+        });
+        
+        document.getElementById('servicePrice').textContent = formatCurrency(serviceTotal);
+        
+        const total = (currentTourPrice * quantity) + serviceTotal;
+        document.getElementById('totalPrice').innerHTML = `<strong>${formatCurrency(total)}</strong>`;
+    }
+
+    function processPayment() {
+        const tourId = document.getElementById('tourIdInput').value;
+        const quantity = document.getElementById('ticketQuantity').value;
+        const services = Array.from(document.querySelectorAll('#servicesList input[type="checkbox"]:checked'))
+            .map(cb => cb.value).join(',');
+        
+        console.log('Processing payment:', { tourId, quantity, services });
+        window.location.href = `/Customer/Payment?tourId=${tourId}&soLuongVe=${quantity}&dichVuIds=${services}`;
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('vi-VN');
+    }
+
+    function getVehicleIcon(type) {
+        const icons = {
+            'Xe bus': 'bus',
+            'Máy bay': 'plane',
+            'Tàu hỏa': 'train',
+            'Tàu thủy': 'ship',
+            'Xe limousine': 'car'
+        };
+        return icons[type] || 'shuttle-van';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    }
+</script>
+}

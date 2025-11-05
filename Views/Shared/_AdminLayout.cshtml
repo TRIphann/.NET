@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin Panel</title>
+    <link rel="stylesheet" href="~/css/admin-layout.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <h2>
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admin Panel</span>
+                </h2>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="@Url.Action("Statistics", "Admin", new { tab = "tours" })"
+                       class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Statistics" ? "active" : "")">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Thống kê</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("Accounts", "Admin", new { tab = "employees" })"
+                       class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Accounts" ? "active" : "")">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Tài khoản</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("Tours", "Admin")"
+                       class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Tours" || 
+                                ViewContext.RouteData.Values["action"]?.ToString() == "CreateTour" || 
+                                ViewContext.RouteData.Values["action"]?.ToString() == "EditTour" ? "active" : "")">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <span>Quản lý Tour</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <a href="@Url.Action("Logout", "Account")" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-content">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Hướng Dẫn Viên</title>
+    <link rel="stylesheet" href="~/css/guide-layout.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body>
+
+    <div class="guide-layout">
+        <!-- Sidebar -->
+        <nav class="guide-sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-user-tie"></i> Hướng Dẫn Viên</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="@Url.Action("AvailableTours", "Guide")" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "AvailableTours" ? "active" : "")">
+                        <i class="fas fa-list"></i>
+                        <span>Danh sách Tour</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("RegisteredTours", "Guide")" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "RegisteredTours" ? "active" : "")">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Tour đã đăng ký</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("Profile", "Guide")" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Profile" ? "active" : "")">
+                        <i class="fas fa-user"></i>
+                        <span>Hồ sơ cá nhân</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <a href="@Url.Action("Logout", "Account")" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="guide-content">
+            @if (TempData["Success"] != null)
+        {
+            <div class="alert-custom alert-success">
+                <i class="fas fa-check-circle"></i> @TempData["Success"]
+            </div>
+        }
+
+            @if (TempData["Error"] != null)
+        {
+            <div class="alert-custom alert-error">
+                <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+            </div>
+        }
+
+            @RenderBody()
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    @RenderSection("Scripts", required: false)
+
+</body>
+</html>

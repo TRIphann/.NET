@@ -1,0 +1,119 @@
+﻿@model IEnumerable<QLDuLichRBAC_Upgrade.Models.Entities.HoaDon>
+
+    @{
+    ViewData["Title"] = "Tour đã thanh toán";
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+    }
+
+    <div class="content-header">
+        <h1><i class="fas fa-check-circle"></i> Tour đã thanh toán</h1>
+    </div>
+
+    <div class="paid-tours-grid">
+        @if (Model != null && Model.Any())
+    {
+        @foreach (var hoaDon in Model)
+        {
+            var tour = hoaDon.Tour;
+            var imagePath = tour?.Tour_Anh?.FirstOrDefault()?.DuongDan ?? "default.jpg";
+            var guide = tour?.NhanVien_Tour?.FirstOrDefault()?.NhanVien;
+            var soNgay = tour != null ? (tour.NgayKetThuc - tour.NgayBatDau).Days + 1 : 0;
+
+        <div class="paid-tour-card">
+            <div class="paid-tour-image">
+               <img src="~/images/@imagePath"
+                     alt="@tour?.TenTour"
+                     style="width: 100%; height: 100%; object-fit: cover;"
+                     onerror="this.src='/images/default.jpg'" />
+            </div>
+
+            <div class="paid-tour-body">
+                <h3 class="paid-tour-title">@tour?.TenTour</h3>
+
+                <div class="paid-tour-info">
+                    <i class="fas fa-calendar-alt"></i>
+                    <strong>Ngày khởi hành:</strong> @tour?.NgayBatDau.ToString("dd/MM/yyyy")
+                </div>
+
+                <div class="paid-tour-info">
+                    <i class="fas fa-calendar-check"></i>
+                    <strong>Ngày kết thúc:</strong> @tour?.NgayKetThuc.ToString("dd/MM/yyyy")
+                </div>
+
+                <div class="paid-tour-info">
+                    <i class="fas fa-clock"></i>
+                    <strong>Thời gian:</strong> @soNgay ngày @(soNgay - 1) đêm
+                </div>
+
+                <div class="paid-tour-info">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <strong>Địa điểm:</strong>
+                    @if (tour?.Tour_DiaDiem != null && tour.Tour_DiaDiem.Any())
+                        {
+                    @string.Join(", ", tour.Tour_DiaDiem.Select(dd => dd.DiaDiem?.TenDD ?? "N/A"))
+                        }
+                        else
+                        {
+                    <span>Chưa có thông tin</span>
+                        }
+                </div>
+
+                <div class="paid-tour-info">
+                    <i class="fas fa-user-tie"></i>
+                    <strong>Hướng dẫn viên:</strong>
+                    @if (guide != null)
+                        {
+                    <span>@guide.TenNV (@guide.SDT)</span>
+                        }
+                        else
+                        {
+                    <span>Chưa phân công</span>
+                        }
+                </div>
+
+                <div class="paid-tour-info">
+                    <i class="fas fa-receipt"></i>
+                    <strong>Mã hóa đơn:</strong> #@hoaDon.MaHD
+                </div>
+
+                <div class="paid-tour-info">
+                    <i class="fas fa-calendar"></i>
+                    <strong>Ngày thanh toán:</strong> @hoaDon.NgayTT.ToString("dd/MM/yyyy HH:mm")
+                </div>
+
+                <div class="paid-tour-info">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <strong>Tổng tiền:</strong> <span style="color: #667eea; font-weight: 700; font-size: 18px;">@hoaDon.TongTien.ToString("N0") ₫</span>
+                </div>
+
+                <div class="paid-tour-status">
+                    <i class="fas fa-check-double"></i> Đã thanh toán - @hoaDon.HinhThucTT
+                </div>
+            </div>
+        </div>
+        }
+    }
+    else
+    {
+        <div class="alert-custom alert-error">
+            <i class="fas fa-info-circle"></i> Bạn chưa thanh toán tour nào.
+            <br><br>
+            <a href="@Url.Action("RegisterTour", "Customer")" class="btn-pay" style="display: inline-block; margin-top: 10px; text-decoration: none;">
+                <i class="fas fa-search"></i> Xem danh sách tour
+            </a>
+        </div>
+    }
+    </div>
+
+    <style>
+        .image-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 48px;
+        }
+    </style>

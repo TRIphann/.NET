@@ -1,0 +1,213 @@
+﻿@model QLDuLichRBAC_Upgrade.Models.Entities.KhachHang
+
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+    var user = ViewBag.User as QLDuLichRBAC_Upgrade.Models.Entities.User;
+}
+
+<style>
+    .profile-avatar-upload {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        margin: 0 auto;
+    }
+
+    .profile-avatar-img {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #667eea;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .profile-avatar-default {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 60px;
+        color: white;
+        border: 4px solid #667eea;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .avatar-upload-overlay {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: #667eea;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        transition: all 0.3s ease;
+    }
+
+    .avatar-upload-overlay:hover {
+        background: #764ba2;
+        transform: scale(1.1);
+    }
+
+    .avatar-upload-overlay i {
+        color: white;
+        font-size: 18px;
+    }
+
+    #avatarInput {
+        display: none;
+    }
+</style>
+
+<div class="profile-container">
+    <form asp-action="UpdateProfile" method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="MaKH" />
+        <input type="hidden" asp-for="UserId" />
+        <input type="hidden" asp-for="CCCD" />
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+            </div>
+        }
+
+        <div class="profile-header">
+            <div class="profile-avatar-upload">
+                @if (!string.IsNullOrEmpty(Model.AnhDaiDien))
+                {
+                    <img src="~/@Model.AnhDaiDien" alt="Avatar" class="profile-avatar-img" id="avatarPreview"
+                         onerror="this.style.display='none'; document.getElementById('avatarDefault').style.display='flex';" />
+                    <div class="profile-avatar-default" id="avatarDefault" style="display: none;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                }
+                else
+                {
+                    <div class="profile-avatar-default" id="avatarPreview">
+                        <i class="fas fa-user"></i>
+                    </div>
+                }
+                <label for="avatarInput" class="avatar-upload-overlay">
+                    <i class="fas fa-camera"></i>
+                </label>
+                <input type="file" id="avatarInput" name="avatarFile" accept="image/*" />
+            </div>
+            <h2 class="profile-name">@Model.TenKH</h2>
+            <p class="profile-email">@user?.Email</p>
+        </div>
+
+        <div class="profile-section">
+            <h3><i class="fas fa-id-card"></i> Thông tin tài khoản</h3>
+            <div class="profile-info-grid">
+                <div class="profile-info-item">
+                    <label><i class="fas fa-user-circle"></i> Tên đăng nhập</label>
+                    <div class="value">@user?.Username</div>
+                </div>
+                <div class="profile-info-item">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <div class="value">@(user?.Email ?? "Chưa cập nhật")</div>
+                </div>
+                <div class="profile-info-item">
+                    <label><i class="fas fa-shield-alt"></i> Vai trò</label>
+                    <div class="value">@user?.Role</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h3><i class="fas fa-user"></i> Cập nhật thông tin</h3>
+            <div class="profile-info-grid">
+                <div class="form-group">
+                    <label asp-for="TenKH"><i class="fas fa-user"></i> Họ và tên</label>
+                    <input asp-for="TenKH" class="form-control" required />
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="GioiTinh"><i class="fas fa-venus-mars"></i> Giới tính</label>
+                    <select asp-for="GioiTinh" class="form-control" required>
+                        <option value="Nam">Nam</option>
+                        <option value="Nữ">Nữ</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="SDT"><i class="fas fa-phone"></i> Số điện thoại</label>
+                    <input asp-for="SDT" class="form-control" type="tel" required />
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label asp-for="DiaChi"><i class="fas fa-map-marker-alt"></i> Địa chỉ</label>
+                    <textarea asp-for="DiaChi" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-edit-profile">
+            <i class="fas fa-save"></i> Cập nhật thông tin
+        </button>
+    </form>
+</div>
+
+<script>
+    // Preview ảnh khi chọn file
+    document.getElementById('avatarInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Kiểm tra kích thước file (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Kích thước file không được vượt quá 5MB');
+                this.value = '';
+                return;
+            }
+
+            // Kiểm tra định dạng file
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+            if (!validTypes.includes(file.type)) {
+                alert('Chỉ chấp nhận file ảnh (.jpg, .jpeg, .png, .gif)');
+                this.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('avatarPreview');
+                const defaultAvatar = document.getElementById('avatarDefault');
+                
+                if (preview && preview.tagName === 'IMG') {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    if (defaultAvatar) defaultAvatar.style.display = 'none';
+                } else {
+                    // Tạo img element mới
+                    const newImg = document.createElement('img');
+                    newImg.src = e.target.result;
+                    newImg.className = 'profile-avatar-img';
+                    newImg.id = 'avatarPreview';
+                    
+                    const container = document.querySelector('.profile-avatar-upload');
+                    if (preview) preview.remove();
+                    if (defaultAvatar) defaultAvatar.remove();
+                    container.insertBefore(newImg, container.firstChild);
+                }
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+</script>

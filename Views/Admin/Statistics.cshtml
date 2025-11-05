@@ -1,0 +1,407 @@
+﻿@{
+    ViewData["Title"] = "Thống kê";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var currentTab = ViewBag.CurrentTab ?? "tours";
+}
+
+<h1><i class="fas fa-chart-line"></i> Thống kê hệ thống</h1>
+
+<!-- Top Navigation -->
+<div class="top-nav">
+    <ul>
+        <li>
+            <a href="@Url.Action("Statistics", new { tab = "tours" })"
+               class="@(currentTab == "tours" ? "active" : "")">
+                <i class="fas fa-map-marked-alt"></i> Tour
+            </a>
+        </li>
+        <li>
+            <a href="@Url.Action("Statistics", new { tab = "employees" })"
+               class="@(currentTab == "employees" ? "active" : "")">
+                <i class="fas fa-user-tie"></i> Nhân viên
+            </a>
+        </li>
+        <li>
+            <a href="@Url.Action("Statistics", new { tab = "customers" })"
+               class="@(currentTab == "customers" ? "active" : "")">
+                <i class="fas fa-users"></i> Khách hàng
+            </a>
+        </li>
+    </ul>
+</div>
+
+@if (currentTab == "tours")
+{
+    var tourStats = ViewBag.TourStats;
+
+    <!-- THỐNG KÊ TOUR -->
+<div class="stats-cards">
+    <div class="stat-card">
+        <i class="fas fa-map-marked-alt stat-icon"></i>
+        <h3>Tổng số tour</h3>
+        <div class="stat-value">@tourStats.TotalTours</div>
+    </div>
+    <div class="stat-card">
+        <i class="fas fa-play-circle stat-icon"></i>
+        <h3>Tour đang hoạt động</h3>
+        <div class="stat-value">@tourStats.ActiveTours</div>
+    </div>
+    <div class="stat-card">
+        <i class="fas fa-check-circle stat-icon"></i>
+        <h3>Tour đã hoàn thành</h3>
+        <div class="stat-value">@tourStats.CompletedTours</div>
+    </div>
+</div>
+
+<div class="charts-grid">
+    <!-- Top Tour được đăng ký nhiều nhất -->
+    <div class="chart-container">
+        <h3><i class="fas fa-trophy"></i> Top Tour được đăng ký nhiều nhất</h3>
+        <canvas id="chartTopTours"></canvas>
+    </div>
+
+    <!-- Tour theo tháng -->
+    <div class="chart-container">
+        <h3><i class="fas fa-calendar-alt"></i> Số lượng tour theo tháng</h3>
+        <canvas id="chartToursByMonth"></canvas>
+    </div>
+
+    <!-- Tour theo khoảng giá -->
+    <div class="chart-container">
+        <h3><i class="fas fa-dollar-sign"></i> Phân bố tour theo giá</h3>
+        <canvas id="chartToursByPrice"></canvas>
+    </div>
+
+    <!-- Doanh thu từ tour -->
+    <div class="chart-container">
+        <h3><i class="fas fa-coins"></i> Doanh thu từ các tour</h3>
+        <canvas id="chartTourRevenue"></canvas>
+    </div>
+</div>
+
+ <!-- Bảng chi tiết -->
+<div class="table-container">
+    <h3><i class="fas fa-table"></i> Chi tiết các tour</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Mã tour</th>
+                <th>Tên tour</th>
+                <th>Giá (VNĐ)</th>
+                <th>Số lượt đăng ký</th>
+                <th>Doanh thu (VNĐ)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tour in tourStats.TopTours)
+                {
+            <tr>
+                <td>#@tour.MaTour</td>
+                <td>@tour.TenTour</td>
+                <td>@tour.Gia.ToString("N0")</td>
+                <td>@tour.SoLuotDangKy</td>
+                <td>@tour.DoanhThu.ToString("N0")</td>
+            </tr>
+                }
+        </tbody>
+    </table>
+</div>
+}
+else if (currentTab == "employees")
+{
+    var employeeStats = ViewBag.EmployeeStats;
+
+ <!-- THỐNG KÊ NHÂN VIÊN -->
+<div class="stats-cards">
+    <div class="stat-card">
+        <i class="fas fa-user-tie stat-icon"></i>
+        <h3>Tổng nhân viên</h3>
+        <div class="stat-value">@employeeStats.TotalEmployees</div>
+    </div>
+    <div class="stat-card">
+        <i class="fas fa-user-check stat-icon"></i>
+        <h3>Nhân viên đang hoạt động</h3>
+        <div class="stat-value">@employeeStats.ActiveEmployees</div>
+    </div>
+</div>
+
+<div class="charts-grid">
+    <!-- Top nhân viên -->
+    <div class="chart-container">
+        <h3><i class="fas fa-award"></i> Top nhân viên dẫn tour nhiều nhất</h3>
+        <canvas id="chartTopEmployees"></canvas>
+    </div>
+
+    <!-- Nhân viên theo giới tính -->
+    <div class="chart-container">
+        <h3><i class="fas fa-venus-mars"></i> Phân bố nhân viên theo giới tính</h3>
+        <canvas id="chartEmployeesByGender"></canvas>
+    </div>
+
+    <!-- Khối lượng công việc -->
+    <div class="chart-container">
+        <h3><i class="fas fa-tasks"></i> Khối lượng công việc nhân viên</h3>
+        <canvas id="chartEmployeeWorkload"></canvas>
+    </div>
+
+    <!-- Lương nhân viên -->
+    <div class="chart-container">
+        <h3><i class="fas fa-money-bill-wave"></i> Tổng lương nhân viên</h3>
+        <canvas id="chartEmployeeSalary"></canvas>
+    </div>
+</div>
+
+ <!-- Bảng chi tiết -->
+<div class="table-container">
+    <h3><i class="fas fa-table"></i> Chi tiết nhân viên</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Mã NV</th>
+                <th>Tên nhân viên</th>
+                <th>Giới tính</th>
+                <th>SĐT</th>
+                <th>Số tour</th>
+                <th>Tổng lương (VNĐ)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var emp in employeeStats.TopEmployees)
+                {
+            <tr>
+                <td>#@emp.MaNV</td>
+                <td>@emp.TenNV</td>
+                <td>@emp.GioiTinh</td>
+                <td>@emp.SDT</td>
+                <td>@emp.SoTour</td>
+                <td>@emp.TongLuong.ToString("N0")</td>
+            </tr>
+                }
+        </tbody>
+    </table>
+</div>
+}
+else if (currentTab == "customers")
+{
+    var customerStats = ViewBag.CustomerStats;
+    var revenueStats = ViewBag.RevenueStats;
+
+ <!-- THỐNG KÊ KHÁCH HÀNG -->
+<div class="stats-cards">
+    <div class="stat-card">
+        <i class="fas fa-users stat-icon"></i>
+        <h3>Tổng khách hàng</h3>
+        <div class="stat-value">@customerStats.TotalCustomers</div>
+    </div>
+    <div class="stat-card">
+        <i class="fas fa-user-check stat-icon"></i>
+        <h3>Khách hàng đã đặt tour</h3>
+        <div class="stat-value">@customerStats.ActiveCustomers</div>
+    </div>
+</div>
+
+<div class="charts-grid">
+    <!-- Top khách hàng -->
+    <div class="chart-container">
+        <h3><i class="fas fa-crown"></i> Top khách hàng chi tiêu nhiều nhất</h3>
+        <canvas id="chartTopCustomers"></canvas>
+    </div>
+
+    <!-- Khách hàng theo giới tính -->
+    <div class="chart-container">
+        <h3><i class="fas fa-venus-mars"></i> Phân bố khách hàng theo giới tính</h3>
+        <canvas id="chartCustomersByGender"></canvas>
+    </div>
+
+    <!-- Khách hàng mới theo tháng -->
+    <div class="chart-container">
+        <h3><i class="fas fa-user-plus"></i> Khách hàng mới theo tháng</h3>
+        <canvas id="chartNewCustomers"></canvas>
+    </div>
+
+    <!-- Doanh thu theo tháng -->
+    <div class="chart-container">
+        <h3><i class="fas fa-chart-area"></i> Doanh thu theo tháng</h3>
+        <canvas id="chartRevenue"></canvas>
+    </div>
+</div>
+
+ <!-- Bảng chi tiết -->
+<div class="table-container">
+    <h3><i class="fas fa-table"></i> Chi tiết khách hàng</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Mã KH</th>
+                <th>Tên khách hàng</th>
+                <th>Giới tính</th>
+                <th>SĐT</th>
+                <th>Số tour đã đặt</th>
+                <th>Tổng chi tiêu (VNĐ)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var cust in customerStats.TopCustomers)
+                {
+            <tr>
+                <td>#@cust.MaKH</td>
+                <td>@cust.TenKH</td>
+                <td>@cust.GioiTinh</td>
+                <td>@cust.SDT</td>
+                <td>@cust.SoTourDaDangKy</td>
+                <td>@cust.TongChiTieu.ToString("N0")</td>
+            </tr>
+                }
+        </tbody>
+    </table>
+</div>
+}
+
+@section Scripts {
+    <script>
+    const chartColors = {
+        blue: 'rgba(54, 162, 235, 0.8)',
+        red: 'rgba(255, 99, 132, 0.8)',
+        yellow: 'rgba(255, 206, 86, 0.8)',
+        green: 'rgba(75, 192, 192, 0.8)',
+        purple: 'rgba(153, 102, 255, 0.8)',
+        orange: 'rgba(255, 159, 64, 0.8)'
+    };
+
+    function createChart(id, type, labels, data, label, color) {
+        const ctx = document.getElementById(id);
+        if (!ctx) return;
+
+        new Chart(ctx, {
+            type: type,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: data,
+                    backgroundColor: color,
+                    borderColor: color.replace('0.8', '1'),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    @if (currentTab == "tours")
+    {
+        var tourStats = ViewBag.TourStats;
+        var topTours = tourStats.TopTours as IEnumerable<dynamic>;
+        var toursByMonth = tourStats.ToursByMonth as IEnumerable<dynamic>;
+        var toursByPrice = tourStats.ToursByPrice as IEnumerable<dynamic>;
+
+        <text>
+        // Top Tours
+        createChart('chartTopTours', 'bar',
+            [@Html.Raw(string.Join(",", topTours.Select(t => $"'{t.TenTour}'")))]
+            , [@Html.Raw(string.Join(",", topTours.Select(t => t.SoLuotDangKy)))],
+            'Số lượt đăng ký', chartColors.blue);
+
+        // Tours by Month
+        createChart('chartToursByMonth', 'line',
+            [@Html.Raw(string.Join(",", toursByMonth.Select(t => $"'{t.Thang}'")))],
+            [@Html.Raw(string.Join(",", toursByMonth.Select(t => t.SoTour)))],
+            'Số tour', chartColors.green);
+
+        // Tours by Price
+        createChart('chartToursByPrice', 'pie',
+            [@Html.Raw(string.Join(",", toursByPrice.Select(t => $"'{t.Range}'")))],
+            [@Html.Raw(string.Join(",", toursByPrice.Select(t => t.Count)))],
+            'Số tour', [chartColors.yellow, chartColors.orange, chartColors.red]);
+
+        // Tour Revenue
+        createChart('chartTourRevenue', 'bar',
+            [@Html.Raw(string.Join(",", topTours.Select(t => $"'{t.TenTour}'")))],
+            [@Html.Raw(string.Join(",", topTours.Select(t => t.DoanhThu)))],
+            'Doanh thu (VNĐ)', chartColors.purple);
+        </text>
+    }
+    else if (currentTab == "employees")
+    {
+        var employeeStats = ViewBag.EmployeeStats;
+        var topEmployees = employeeStats.TopEmployees as IEnumerable<dynamic>;
+        var employeesByGender = employeeStats.EmployeesByGender as IEnumerable<dynamic>;
+        var employeeWorkload = employeeStats.EmployeeWorkload as IEnumerable<dynamic>;
+
+        <text>
+        // Top Employees
+        createChart('chartTopEmployees', 'bar',
+            [@Html.Raw(string.Join(",", topEmployees.Select(e => $"'{e.TenNV}'")))],
+            [@Html.Raw(string.Join(",", topEmployees.Select(e => e.SoTour)))],
+            'Số tour', chartColors.blue);
+
+        // Employees by Gender
+        createChart('chartEmployeesByGender', 'doughnut',
+            [@Html.Raw(string.Join(",", employeesByGender.Select(g => $"'{g.GioiTinh}'")))],
+            [@Html.Raw(string.Join(",", employeesByGender.Select(g => g.Count)))],
+            'Số nhân viên', [chartColors.blue, chartColors.red]);
+
+        // Employee Workload
+        createChart('chartEmployeeWorkload', 'bar',
+            [@Html.Raw(string.Join(",", employeeWorkload.Select(e => $"'{e.TenNV}'")))],
+            [@Html.Raw(string.Join(",", employeeWorkload.Select(e => e.SoTour)))],
+            'Số tour', chartColors.green);
+
+        // Employee Salary
+        createChart('chartEmployeeSalary', 'bar',
+            [@Html.Raw(string.Join(",", topEmployees.Select(e => $"'{e.TenNV}'")))],
+            [@Html.Raw(string.Join(",", topEmployees.Select(e => e.TongLuong)))],
+            'Lương (VNĐ)', chartColors.purple);
+        </text>
+    }
+    else if (currentTab == "customers")
+    {
+        var customerStats = ViewBag.CustomerStats;
+        var revenueStats = ViewBag.RevenueStats;
+        var topCustomers = customerStats.TopCustomers as IEnumerable<dynamic>;
+        var customersByGender = customerStats.CustomersByGender as IEnumerable<dynamic>;
+        var newCustomersByMonth = customerStats.NewCustomersByMonth as IEnumerable<dynamic>;
+        var revenueList = revenueStats as IEnumerable<dynamic>;
+
+        <text>
+        // Top Customers
+        createChart('chartTopCustomers', 'bar',
+            [@Html.Raw(string.Join(",", topCustomers.Select(c => $"'{c.TenKH}'")))],
+            [@Html.Raw(string.Join(",", topCustomers.Select(c => c.TongChiTieu)))],
+            'Chi tiêu (VNĐ)', chartColors.blue);
+
+        // Customers by Gender
+        createChart('chartCustomersByGender', 'pie',
+            [@Html.Raw(string.Join(",", customersByGender.Select(g => $"'{g.GioiTinh}'")))],
+            [@Html.Raw(string.Join(",", customersByGender.Select(g => g.Count)))],
+            'Số khách hàng', [chartColors.blue, chartColors.red]);
+
+        // New Customers
+        createChart('chartNewCustomers', 'line',
+            [@Html.Raw(string.Join(",", newCustomersByMonth.Select(c => $"'{c.Thang}'")))],
+            [@Html.Raw(string.Join(",", newCustomersByMonth.Select(c => c.Count)))],
+            'Khách hàng mới', chartColors.green);
+
+        // Revenue
+        createChart('chartRevenue', 'line',
+            [@Html.Raw(string.Join(",", revenueList.Select(r => $"'{r.Thang}'")))],
+            [@Html.Raw(string.Join(",", revenueList.Select(r => r.DoanhThu)))],
+            'Doanh thu (VNĐ)', chartColors.purple);
+        </text>
+    }
+    </script>
+}

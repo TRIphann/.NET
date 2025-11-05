@@ -1,0 +1,185 @@
+﻿@model QLDuLichRBAC_Upgrade.Models.Entities.NhanVien
+
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+    Layout = "~/Views/Shared/_GuideLayout.cshtml";
+    var user = ViewBag.User as QLDuLichRBAC_Upgrade.Models.Entities.User;
+}
+
+<div class="profile-container">
+    <div class="content-header">
+        <h1><i class="fas fa-user-circle"></i> Hồ sơ cá nhân</h1>
+    </div>
+
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="avatar-section">
+                @if (!string.IsNullOrEmpty(Model.AnhDaiDien))
+                {
+                <img src="~/@Model.AnhDaiDien"
+                     alt="Avatar"
+                     class="avatar-preview"
+                     id="avatarPreview"
+                     onerror="this.style.display='none'; document.getElementById('avatarDefault').style.display='flex';" />
+                <div class="avatar-default" id="avatarDefault" style="display: none;">
+                    <i class="fas fa-user"></i>
+                </div>
+                }
+                else
+                {
+                <div class="avatar-default" id="avatarPreview">
+                    <i class="fas fa-user"></i>
+                </div>
+                }
+            </div>
+
+            <div class="profile-info">
+                <h2>@Model.TenNV</h2>
+                <p><i class="fas fa-id-badge"></i> <strong>Mã NV:</strong> @Model.MaNV</p>
+                <p><i class="fas fa-briefcase"></i> <strong>Vai trò:</strong> @(Model.VaiTro ?? "Hướng dẫn viên")</p>
+                <p><i class="fas fa-user-tag"></i> <strong>Username:</strong> @user?.Username</p>
+            </div>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+            </div>
+        }
+
+        <form method="post" asp-action="UpdateProfile" asp-controller="Guide" enctype="multipart/form-data">
+            <input type="hidden" asp-for="MaNV" />
+            <input type="hidden" asp-for="UserId" />
+
+            <div class="form-group">
+                <label for="TenNV">
+                    <i class="fas fa-user"></i> Họ và tên
+                </label>
+                <input type="text"
+                       class="form-control"
+                       id="TenNV"
+                       name="TenNV"
+                       value="@Model.TenNV"
+                       required />
+            </div>
+
+            <div class="form-group">
+                <label for="GioiTinh">
+                    <i class="fas fa-venus-mars"></i> Giới tính
+                </label>
+                <select class="form-control" id="GioiTinh" name="GioiTinh" required>
+                    <option value="Nam" selected="@(Model.GioiTinh == "Nam")">Nam</option>
+                    <option value="Nữ" selected="@(Model.GioiTinh == "Nữ")">Nữ</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="SDT">
+                    <i class="fas fa-phone"></i> Số điện thoại
+                </label>
+                <input type="tel"
+                       class="form-control"
+                       id="SDT"
+                       name="SDT"
+                       value="@Model.SDT"
+                       pattern="[0-9]{10}"
+                       placeholder="0123456789" />
+            </div>
+
+            <div class="form-group">
+                <label for="DiaChi">
+                    <i class="fas fa-map-marker-alt"></i> Địa chỉ
+                </label>
+                <input type="text"
+                       class="form-control"
+                       id="DiaChi"
+                       name="DiaChi"
+                       value="@Model.DiaChi" />
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <i class="fas fa-camera"></i> Ảnh đại diện
+                </label>
+                <div class="file-input-wrapper">
+                    <input type="file"
+                           id="avatarFile"
+                           name="avatarFile"
+                           accept="image/*"
+                           onchange="previewImage(event)" />
+                    <label for="avatarFile" class="file-input-label">
+                        <i class="fas fa-upload"></i> Chọn ảnh
+                    </label>
+                </div>
+                <small style="color: #999; display: block; margin-top: 5px;">
+                    Định dạng: JPG, JPEG, PNG, GIF. Kích thước tối đa: 5MB
+                </small>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    <i class="fas fa-save"></i> Cập nhật thông tin
+                </button>
+                <a href="@Url.Action("AvailableTours", "Guide")" class="btn" style="background: #95a5a6; color: white; flex: 1; text-decoration: none;">
+                    <i class="fas fa-times"></i> Hủy
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Kiểm tra kích thước file (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Kích thước file không được vượt quá 5MB');
+                    event.target.value = '';
+                    return;
+                }
+
+                // Kiểm tra định dạng file
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Chỉ chấp nhận file ảnh (.jpg, .jpeg, .png, .gif)');
+                    event.target.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const preview = document.getElementById('avatarPreview');
+                    const defaultAvatar = document.getElementById('avatarDefault');
+
+                    if (preview && preview.tagName === 'IMG') {
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                        if (defaultAvatar) {
+                            defaultAvatar.style.display = 'none';
+                        }
+                    } else {
+                        // Tạo preview mới nếu chưa có
+                        const avatarSection = document.querySelector('.avatar-section');
+                        const newPreview = document.createElement('img');
+                        newPreview.src = e.target.result;
+                        newPreview.className = 'avatar-preview';
+                        newPreview.id = 'avatarPreview';
+                        avatarSection.innerHTML = '';
+                        avatarSection.appendChild(newPreview);
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+}
