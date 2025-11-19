@@ -489,17 +489,61 @@ namespace QLDuLichRBAC_Upgrade.Controllers
         }
 
         // ================================
-        // 3. TOURS - Quản lý Tour
+        // 3. API: Thêm Gói Dịch Vụ
         // ================================
-        public IActionResult Tours(int page = 1, int pageSize = 10)
+        [HttpPost]
+        public IActionResult AddPackage([FromBody] AddPackageRequest request)
         {
-            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.TenGoi))
+                    return Json(new { success = false, message = "Tên gói không được để trống" });
 
-            var totalTours = _context.Tour.Count();
-            var totalPages = (int)Math.Ceiling(totalTours / (double)pageSize);
+                if (request.Gia <= 0)
+                    return Json(new { success = false, message = "Giá gói phải lớn hơn 0" });
 
-            var tours = _context.Tour
-                .Include(t => t.Tour_Anh)
+                var package = new GoiDichVu
+                {
+                    TenGoi = request.TenGoi.Trim(),
+                    MoTa = request.MoTa?.Trim(),
+                    Gia = request.Gia,
+                    ThoiGian = request.ThoiGian > 0 ? request.ThoiGian : null,
+                    SoLuotChoi = request.SoLuotChoi > 0 ? request.SoLuotChoi : null,
+                    TrangThai = "Đang bán"
+                };
+
+                _context.GoiDichVu.Add(package);
+                _context.SaveChanges();
+
+                return Json(new { 
+                    success = true, 
+                    message = "Thêm gói dịch vụ thành công!",
+                    data = new {
+                        maGoi = package.MaGoi,
+                        tenGoi = package.TenGoi,
+                        gia = package.Gia,
+                        thoiGian = package.ThoiGian,
+                        soLuotChoi = package.SoLuotChoi
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Lỗi: {ex.Message}" });
+            }
+        }
+
+        // Request model cho AddPackage
+        public class AddPackageRequest
+        {
+            public string TenGoi { get; set; }
+            public string? MoTa { get; set; }
+            public decimal Gia { get; set; }
+            public int? ThoiGian { get; set; }
+            public int? SoLuotChoi { get; set; }
+        }
+    }
+}
                 .Include(t => t.NhanVien_Tour).ThenInclude(nt => nt.NhanVien)
                 .OrderBy(t => t.MaTour)
                 .Skip((page - 1) * pageSize)
