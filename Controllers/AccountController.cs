@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using QLDuLichRBAC_Upgrade.Models;
 using QLDuLichRBAC_Upgrade.Models.Entities;
 using QLDuLichRBAC_Upgrade.Utils;
@@ -7,8 +7,8 @@ namespace QLDuLichRBAC_Upgrade.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly QLDuLichContext _context;
-        public AccountController(QLDuLichContext context)
+        private readonly QLJumaparenaContext _context;
+        public AccountController(QLJumaparenaContext context)
         {
             _context = context;
         }
@@ -32,10 +32,27 @@ namespace QLDuLichRBAC_Upgrade.Controllers
             // Sanitize input
             Username = AuthHelper.SanitizeInput(Username);
             
-            // Hash password và kiểm tra
+            // Hash password v� ki?m tra
             string hashed = AuthHelper.HashPassword(Password);
+            
+            // Debug logging
+            Console.WriteLine($"Username: {Username}");
+            Console.WriteLine($"Password Hash: {hashed}");
+            
+            var user = _context.User
+                .FirstOrDefault(u => u.Username == Username);
+            
+            if (user != null)
+            {
+                Console.WriteLine($"User found. DB Hash: {user.PasswordHash}");
+                Console.WriteLine($"Hash match: {user.PasswordHash == hashed}");
+            }
+            else
+            {
+                Console.WriteLine("User not found in database");
+            }
 
-            var user = _context.Users
+            user = _context.User
                 .FirstOrDefault(u => u.Username == Username && u.PasswordHash == hashed);
 
             if (user == null)
@@ -52,8 +69,8 @@ namespace QLDuLichRBAC_Upgrade.Controllers
             return user.Role switch
             {
                 "Admin" => RedirectToAction("Dashboard", "Admin"),
-                "Guide" => RedirectToAction("Index", "Guide"),
-                "Customer" => RedirectToAction("Index", "Customer"),
+                "Staff" => RedirectToAction("MySchedule", "Staff"),
+                "Customer" => RedirectToAction("BookTickets", "Customer"),
                 _ => RedirectToAction("Index", "Home")
             };
         }

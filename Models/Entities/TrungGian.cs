@@ -1,142 +1,165 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QLDuLichRBAC_Upgrade.Models.Entities
 {
-    // ============================
-    // Bảng trung gian KhachHang_Tour
-    // ============================
-    public class KhachHang_Tour
+    // ====================================
+    // KHU VUI CHƠI - TRÒ CHƠI
+    // ====================================
+    [Table("KhuVuiChoi_TroChoi")]
+    public class KhuVuiChoi_TroChoi
     {
         [Key, Column(Order = 0)]
-        public int MaKH { get; set; }
+        public int MaKhu { get; set; }
 
         [Key, Column(Order = 1)]
-        public int MaTour { get; set; }
+        public int MaTroChoi { get; set; }
 
-        public int SoLuongVe { get; set; }
+        [StringLength(500)]
+        public string? ViTri { get; set; }
 
-        [ForeignKey("MaKH")]
-        public KhachHang? KhachHang { get; set; }
+        [StringLength(500)]
+        public string? GhiChu { get; set; }
 
-        [ForeignKey("MaTour")]
-        public Tour? Tour { get; set; }
+        [ForeignKey("MaKhu")]
+        public KhuVuiChoi? KhuVuiChoi { get; set; }
+
+        [ForeignKey("MaTroChoi")]
+        public TroChoi? TroChoi { get; set; }
     }
 
-    // ============================
-    // Bảng trung gian NhanVien_Tour
-    // ============================
-    public class NhanVien_Tour
+    // ====================================
+    // GÓI DỊCH VỤ - TRÒ CHƠI
+    // ====================================
+    [Table("GoiDichVu_TroChoi")]
+    public class GoiDichVu_TroChoi
     {
-        // ✅ SỬA: Khóa chính phức hợp (MaNV, MaTour)
+        [Key, Column(Order = 0)]
+        public int MaGoi { get; set; }
+
+        [Key, Column(Order = 1)]
+        public int MaTroChoi { get; set; }
+
+        [StringLength(500)]
+        public string? GhiChu { get; set; }
+
+        [ForeignKey("MaGoi")]
+        public GoiDichVu? GoiDichVu { get; set; }
+
+        [ForeignKey("MaTroChoi")]
+        public TroChoi? TroChoi { get; set; }
+    }
+
+    // ====================================
+    // VÉ - DỊCH VỤ THÊM
+    // ====================================
+    [Table("Ve_DichVuThem")]
+    public class Ve_DichVuThem
+    {
+        [Key, Column(Order = 0)]
+        public int MaVe { get; set; }
+
+        [Key, Column(Order = 1)]
+        public int MaDVThem { get; set; }
+
+        public int SoLuong { get; set; } = 1;
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? ThanhTien { get; set; }
+
+        [ForeignKey("MaVe")]
+        public Ve? Ve { get; set; }
+
+        [ForeignKey("MaDVThem")]
+        public DichVuThem? DichVuThem { get; set; }
+    }
+
+    // ====================================
+    // NHÂN VIÊN - CA
+    // ====================================
+    [Table("NhanVien_Ca")]
+    public class NhanVien_Ca
+    {
         [Key, Column(Order = 0)]
         public int MaNV { get; set; }
 
         [Key, Column(Order = 1)]
-        public int MaTour { get; set; }
+        public int MaCa { get; set; }
 
-        // Khóa ngoại liên kết với bảng NhanVien
+        [Key, Column(Order = 2)]
+        [Required]
+        public DateTime NgayLamViec { get; set; }
+
+        [Column("ThoiGianCheckIn")]
+        public DateTime? ThoiGianCheckIn { get; set; }
+
+        [Column("ThoiGianCheckOut")]
+        public DateTime? ThoiGianCheckOut { get; set; }
+
+        [StringLength(50)]
+        [Column("TrangThaiDiemDanh")]
+        public string TrangThaiDiemDanh { get; set; } = "Chưa điểm danh";
+
+        [Column("DiMuonCoPhep")]
+        public bool DiMuonCoPhep { get; set; } = false;
+
+        [StringLength(500)]
+        [Column("GhiChu")]
+        public string? GhiChu { get; set; }
+
         [ForeignKey("MaNV")]
         public NhanVien? NhanVien { get; set; }
 
-        // Khóa ngoại liên kết với bảng Tour
-        [ForeignKey("MaTour")]
-        public Tour? Tour { get; set; }
+        [ForeignKey("MaCa")]
+        public Ca? Ca { get; set; }
     }
 
-    // ============================
-    // Bảng trung gian DichVuDaDangKy
-    // ============================
-    public class DichVuDaDangKy
-    {
-        [Key, Column(Order = 0)]
-        public int MaKH { get; set; }
-
-        [Key, Column(Order = 1)]
-        public int MaTour { get; set; }
-
-        [Key, Column(Order = 2)]
-        public int MaDV { get; set; }
-
-        [ForeignKey("MaKH")]
-        public KhachHang? KhachHang { get; set; }
-
-        [ForeignKey("MaTour")]
-        public Tour? Tour { get; set; }
-
-        [ForeignKey("MaDV")]
-        public DichVuDiKem? DichVuDiKem { get; set; }
-    }
-
-    // ============================
-    // Bảng Tour_Anh
-    // ============================
-    public class Tour_Anh
+    // ====================================
+    // TRÒ CHƠI - ẢNH
+    // ====================================
+    [Table("TroChoi_Anh")]
+    public class TroChoi_Anh
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MaAnh { get; set; }
 
-        public int MaTour { get; set; }
+        [Required]
+        public int MaTroChoi { get; set; }
 
-        [Required, StringLength(255)]
+        [Required]
+        [StringLength(500)]
         public string DuongDan { get; set; } = string.Empty;
 
-        [ForeignKey("MaTour")]
-        public Tour? Tour { get; set; }
+        [StringLength(200)]
+        public string? MoTa { get; set; }
+
+        [ForeignKey("MaTroChoi")]
+        public TroChoi? TroChoi { get; set; }
     }
 
-    // ============================
-    // Bảng Tour_PhuongTien
-    // ============================
-    public class Tour_PhuongTien
+    // ====================================
+    // KHU VUI CHƠI - ẢNH
+    // ====================================
+    [Table("KhuVuiChoi_Anh")]
+    public class KhuVuiChoi_Anh
     {
-        [Key, Column(Order = 0)]
-        public int MaTour { get; set; }
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int MaAnh { get; set; }
 
-        [Key, Column(Order = 1)]
-        public int MaPT { get; set; }
+        [Required]
+        public int MaKhu { get; set; }
 
-        [ForeignKey("MaTour")]
-        public Tour? Tour { get; set; }
+        [Required]
+        [StringLength(500)]
+        public string DuongDan { get; set; } = string.Empty;
 
-        [ForeignKey("MaPT")]
-        public PhuongTien? PhuongTien { get; set; }
-    }
+        [StringLength(200)]
+        public string? MoTa { get; set; }
 
-    // ============================
-    // Bảng Tour_DiaDiem
-    // ============================
-    public class Tour_DiaDiem
-    {
-        [Key, Column(Order = 0)]
-        public int MaTour { get; set; }
-
-        [Key, Column(Order = 1)]
-        public int MaDD { get; set; }
-
-        [ForeignKey("MaTour")]
-        public Tour? Tour { get; set; }
-
-        [ForeignKey("MaDD")]
-        public DiaDiem? DiaDiem { get; set; }
-    }
-
-    // ============================
-    // Bảng Tour_LichTrinhCT
-    // ============================
-    public class Tour_LichTrinhCT
-    {
-        [Key, Column(Order = 0)]
-        public int MaTour { get; set; }
-
-        [Key, Column(Order = 1)]
-        public int MaLT { get; set; }
-
-        [ForeignKey("MaTour")]
-        public Tour? Tour { get; set; }
-
-        [ForeignKey("MaLT")]
-        public LichTrinhCT? LichTrinhCT { get; set; }
+        [ForeignKey("MaKhu")]
+        public KhuVuiChoi? KhuVuiChoi { get; set; }
     }
 }

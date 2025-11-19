@@ -1,0 +1,438 @@
+@model QLDuLichRBAC_Upgrade.Models.ViewModels.JumparenaPaymentViewModel
+
+@{
+    ViewData["Title"] = "Thanh toán vé - Jumparena";
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+}
+
+<style>
+    .payment-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 30px;
+    }
+
+    .payment-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 20px 20px 0 0;
+        text-align: center;
+    }
+
+    .payment-header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+    }
+
+    .payment-body {
+        background: white;
+        padding: 40px;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .info-item {
+        padding: 15px;
+        background: #f8f9ff;
+        border-radius: 12px;
+        border-left: 4px solid #667eea;
+    }
+
+    .info-label {
+        font-size: 0.9em;
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    .info-value {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .qr-section {
+        text-align: center;
+        padding: 30px;
+        background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+        border-radius: 15px;
+        margin: 30px 0;
+    }
+
+    .qr-code {
+        max-width: 300px;
+        margin: 20px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .qr-code img {
+        width: 100%;
+        height: auto;
+    }
+
+    .transaction-code {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #667eea;
+        margin-top: 15px;
+        padding: 15px;
+        background: white;
+        border-radius: 10px;
+        display: inline-block;
+    }
+
+    .ticket-code {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #764ba2;
+        margin: 15px 0;
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        border: 2px dashed #764ba2;
+    }
+
+    .service-list {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+    }
+
+    .service-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .service-item:last-child {
+        border-bottom: none;
+    }
+
+    .price-summary {
+        background: #f8f9ff;
+        padding: 25px;
+        border-radius: 15px;
+        margin-top: 30px;
+    }
+
+    .price-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        font-size: 1.1em;
+    }
+
+    .price-row.total {
+        border-top: 2px solid #667eea;
+        margin-top: 15px;
+        padding-top: 15px;
+        font-size: 1.5em;
+        color: #667eea;
+    }
+
+    .payment-instructions {
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 15px;
+        padding: 25px;
+        margin: 30px 0;
+    }
+
+    .payment-instructions h3 {
+        color: #856404;
+        margin-bottom: 15px;
+    }
+
+    .payment-instructions ol {
+        margin: 15px 0;
+        padding-left: 25px;
+    }
+
+    .payment-instructions li {
+        margin: 10px 0;
+        color: #856404;
+    }
+
+    .btn-confirm {
+        width: 100%;
+        padding: 18px;
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.3em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 20px;
+    }
+
+    .btn-confirm:hover {
+        transform: scale(1.02);
+        box-shadow: 0 10px 25px rgba(67, 233, 123, 0.4);
+    }
+
+    .btn-check-payment {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 15px;
+    }
+
+    .btn-check-payment:hover {
+        transform: scale(1.02);
+    }
+
+    .payment-status {
+        padding: 20px;
+        border-radius: 12px;
+        margin: 20px 0;
+        text-align: center;
+        display: none;
+    }
+
+    .payment-status.success {
+        background: #d4edda;
+        border: 2px solid #28a745;
+        color: #155724;
+    }
+
+    .payment-status.error {
+        background: #f8d7da;
+        border: 2px solid #dc3545;
+        color: #721c24;
+    }
+
+    .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @@keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+<div class="payment-container">
+    <div class="payment-header">
+        <h1><i class="fas fa-ticket-alt"></i> Thanh Toán Vé</h1>
+        <p>Quét mã QR để hoàn tất thanh toán</p>
+    </div>
+
+    <div class="payment-body">
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-box"></i> Gói dịch vụ</div>
+                <div class="info-value">@Model.TenGoi</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-clock"></i> Ca</div>
+                <div class="info-value">@Model.TenCa</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-calendar"></i> Ngày sử dụng</div>
+                <div class="info-value">@Model.NgaySuDung.ToString("dd/MM/yyyy")</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-users"></i> Số người</div>
+                <div class="info-value">@Model.SoNguoi người</div>
+            </div>
+        </div>
+
+        @if (Model.DichVuDaChon.Any())
+        {
+            <h3 style="margin-top: 30px;"><i class="fas fa-concierge-bell"></i> Dịch vụ thêm</h3>
+            <ul class="service-list">
+                @foreach (var dv in Model.DichVuDaChon)
+                {
+                    <li class="service-item">
+                        <span>@dv.TenDV</span>
+                        <span style="color: #667eea; font-weight: bold;">@dv.DonGia.ToString("N0")₫</span>
+                    </li>
+                }
+            </ul>
+        }
+
+        <div class="price-summary">
+            <h3 style="margin-bottom: 20px;"><i class="fas fa-receipt"></i> Chi tiết thanh toán</h3>
+            <div class="price-row">
+                <span>Giá gói (@Model.SoNguoi người)</span>
+                <span>@((Model.GiaGoi * Model.SoNguoi).ToString("N0"))₫</span>
+            </div>
+            @if (Model.DichVuDaChon.Any())
+            {
+                <div class="price-row">
+                    <span>Dịch vụ thêm</span>
+                    <span>@Model.DichVuDaChon.Sum(dv => dv.DonGia).ToString("N0")₫</span>
+                </div>
+            }
+            <div class="price-row total">
+                <span><strong>Tổng cộng</strong></span>
+                <span><strong>@Model.TongTien.ToString("N0")₫</strong></span>
+            </div>
+        </div>
+
+        <div class="qr-section">
+            <h3><i class="fas fa-qrcode"></i> Quét mã QR để thanh toán</h3>
+            <p style="color: #666; margin-top: 10px;">Sử dụng ứng dụng ngân hàng để quét mã QR</p>
+            
+            <div class="qr-code">
+                <img src="data:image/png;base64,@Model.QRCodeBase64" alt="QR Code thanh toán" />
+            </div>
+
+            <div class="transaction-code">
+                <i class="fas fa-hashtag"></i> Mã GD: <span id="transactionCode">@Model.MaGiaoDich</span>
+                <button onclick="copyToClipboard('@Model.MaGiaoDich')" 
+                        style="margin-left: 10px; padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+
+            <div class="ticket-code">
+                <i class="fas fa-ticket-alt"></i> Mã vé: @Model.MaVeCode
+            </div>
+        </div>
+
+        <div class="payment-instructions">
+            <h3><i class="fas fa-info-circle"></i> Hướng dẫn thanh toán</h3>
+            <ol>
+                <li>Mở ứng dụng ngân hàng của bạn</li>
+                <li>Chọn chức năng quét mã QR</li>
+                <li>Quét mã QR bên trên</li>
+                <li>Kiểm tra thông tin và xác nhận thanh toán</li>
+                <li>Nhấn "Kiểm tra thanh toán" bên dưới sau khi chuyển khoản</li>
+            </ol>
+            <p><strong>Lưu ý:</strong> Nội dung chuyển khoản phải chứa mã giao dịch <strong>@Model.MaGiaoDich</strong></p>
+        </div>
+
+        <div id="paymentStatus" class="payment-status"></div>
+
+        <button type="button" class="btn-check-payment" onclick="checkPayment()">
+            <i class="fas fa-search"></i> Kiểm tra thanh toán
+        </button>
+
+        <button type="button" class="btn-confirm" onclick="confirmPayment()" style="display: none;" id="btnConfirm">
+            <i class="fas fa-check-circle"></i> Xác nhận đặt vé
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let paymentChecked = false;
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Đã sao chép mã giao dịch!');
+        });
+    }
+
+    async function checkPayment() {
+        const statusDiv = document.getElementById('paymentStatus');
+        const checkBtn = document.querySelector('.btn-check-payment');
+        
+        checkBtn.disabled = true;
+        checkBtn.innerHTML = '<span class="loading"></span> Đang kiểm tra...';
+        
+        try {
+            const response = await fetch('/Customer/CheckPaymentStatus', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    maGiaoDich: '@Model.MaGiaoDich',
+                    tongTien: @Model.TongTien
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.isSuccess) {
+                statusDiv.className = 'payment-status success';
+                statusDiv.innerHTML = '<i class="fas fa-check-circle" style="font-size: 2em;"></i><br><strong>Thanh toán thành công!</strong><br>Nhấn nút bên dưới để hoàn tất đặt vé.';
+                statusDiv.style.display = 'block';
+                document.getElementById('btnConfirm').style.display = 'block';
+                checkBtn.style.display = 'none';
+                paymentChecked = true;
+            } else {
+                statusDiv.className = 'payment-status error';
+                statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + result.message;
+                statusDiv.style.display = 'block';
+                checkBtn.disabled = false;
+                checkBtn.innerHTML = '<i class="fas fa-search"></i> Kiểm tra thanh toán';
+            }
+        } catch (error) {
+            statusDiv.className = 'payment-status error';
+            statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Lỗi kết nối. Vui lòng thử lại.';
+            statusDiv.style.display = 'block';
+            checkBtn.disabled = false;
+            checkBtn.innerHTML = '<i class="fas fa-search"></i> Kiểm tra thanh toán';
+        }
+    }
+
+    async function confirmPayment() {
+        const confirmBtn = document.getElementById('btnConfirm');
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="loading"></span> Đang xử lý...';
+
+        try {
+            const response = await fetch('/Customer/ConfirmJumparenaPayment?packageId=@Model.MaGoi&timeSlotId=@Model.MaCa&bookingDate=@Model.NgaySuDung.ToString("yyyy-MM-dd")&numberOfPeople=@Model.SoNguoi&extraServices=@string.Join(",", Model.DichVuDaChon.Select(d => d.MaDVThem))', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('✅ ' + result.message);
+                window.location.href = '/Customer/MyTickets';
+            } else {
+                alert('❌ ' + result.message);
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="fas fa-check-circle"></i> Xác nhận đặt vé';
+            }
+        } catch (error) {
+            alert('❌ Lỗi: ' + error.message);
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="fas fa-check-circle"></i> Xác nhận đặt vé';
+        }
+    }
+
+    // Auto check payment every 10 seconds
+    let autoCheckInterval = setInterval(function() {
+        if (!paymentChecked) {
+            checkPayment();
+        } else {
+            clearInterval(autoCheckInterval);
+        }
+    }, 10000);
+</script>
+}

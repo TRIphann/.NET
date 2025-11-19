@@ -1,0 +1,312 @@
+@{
+    ViewData["Title"] = "Thống kê làm việc - Jumparena Staff";
+    Layout = "~/Views/Shared/_StaffLayout.cshtml";
+}
+
+<style>
+    .stats-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 50px 20px;
+        text-align: center;
+        margin: -20px -20px 40px -20px;
+        border-radius: 0 0 30px 30px;
+    }
+
+    .stats-hero h1 {
+        font-size: 2.5em;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .period-selector {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+
+    .month-selector {
+        display: inline-flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .month-selector input {
+        padding: 10px 15px;
+        border: 2px solid #667eea;
+        border-radius: 10px;
+        font-size: 1.1em;
+        text-align: center;
+    }
+
+    .btn-load-stats {
+        padding: 10px 25px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .summary-card {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .summary-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+
+    .summary-card i {
+        font-size: 3em;
+        margin-bottom: 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .summary-value {
+        font-size: 3em;
+        font-weight: bold;
+        color: #667eea;
+        margin: 10px 0;
+    }
+
+    .summary-label {
+        color: #666;
+        font-size: 1.1em;
+    }
+
+    .details-section {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .details-section h3 {
+        color: #667eea;
+        margin-bottom: 25px;
+        font-size: 1.8em;
+    }
+
+    .shifts-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .shifts-table th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .shifts-table td {
+        padding: 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .shifts-table tr:hover {
+        background: #f8f9ff;
+    }
+
+    .date-badge {
+        background: #667eea;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9em;
+    }
+
+    .performance-section {
+        margin-top: 30px;
+        padding: 25px;
+        background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+        border-radius: 15px;
+        border: 2px solid #667eea;
+    }
+
+    .performance-bar {
+        height: 30px;
+        background: #e0e0e0;
+        border-radius: 15px;
+        overflow: hidden;
+        margin: 15px 0;
+    }
+
+    .performance-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        transition: width 1s ease;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+    }
+
+    .empty-state i {
+        font-size: 5em;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="stats-hero">
+    <h1><i class="fas fa-chart-line"></i> Thống Kê Làm Việc</h1>
+    <p>Xem thống kê giờ làm việc và hiệu suất của bạn</p>
+</div>
+
+<div class="period-selector">
+    <div class="month-selector">
+        <label style="font-weight: bold; color: #667eea;">
+            <i class="fas fa-calendar"></i> Chọn tháng:
+        </label>
+        <input type="month" id="selectedMonth" value="@DateTime.Now.ToString("yyyy-MM")" />
+        <button class="btn-load-stats" onclick="loadStats()">
+            <i class="fas fa-sync-alt"></i> Tải thống kê
+        </button>
+    </div>
+</div>
+
+<div id="statsContent">
+    <div class="summary-cards">
+        <div class="summary-card">
+            <i class="fas fa-calendar-check"></i>
+            <div class="summary-value" id="totalShifts">@ViewBag.TotalShifts</div>
+            <div class="summary-label">Tổng ca làm</div>
+        </div>
+
+        <div class="summary-card">
+            <i class="fas fa-clock"></i>
+            <div class="summary-value" id="totalHours">@ViewBag.TotalHours</div>
+            <div class="summary-label">Tổng giờ</div>
+        </div>
+
+        <div class="summary-card">
+            <i class="fas fa-users"></i>
+            <div class="summary-value" id="totalCustomers">@ViewBag.TotalCustomers</div>
+            <div class="summary-label">Khách phục vụ</div>
+        </div>
+
+        <div class="summary-card">
+            <i class="fas fa-trophy"></i>
+            <div class="summary-value" id="performanceScore">@(ViewBag.PerformanceScore ?? 0)%</div>
+            <div class="summary-label">Hiệu suất</div>
+        </div>
+    </div>
+
+    @if (ViewBag.Shifts != null && ((IEnumerable<dynamic>)ViewBag.Shifts).Any())
+    {
+        <div class="details-section">
+            <h3><i class="fas fa-list"></i> Chi tiết ca làm việc</h3>
+            
+            <table class="shifts-table">
+                <thead>
+                    <tr>
+                        <th>Ngày</th>
+                        <th>Ca làm</th>
+                        <th>Thời gian</th>
+                        <th>Số giờ</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var shift in (IEnumerable<dynamic>)ViewBag.Shifts)
+                    {
+                        <tr>
+                            <td>
+                                <span class="date-badge">@shift.NgayLamViec.ToString("dd/MM/yyyy")</span>
+                            </td>
+                            <td><strong>@shift.Ca?.TenCa</strong></td>
+                            <td>
+                                <i class="fas fa-clock"></i>
+                                @shift.Ca?.GioBatDau.ToString("HH:mm") - @shift.Ca?.GioKetThuc.ToString("HH:mm")
+                            </td>
+                            <td>
+                                @{
+                                    var hours = (shift.Ca.GioKetThuc.ToTimeSpan() - shift.Ca.GioBatDau.ToTimeSpan()).TotalHours;
+                                }
+                                <strong>@hours.ToString("0.0")h</strong>
+                            </td>
+                            <td>@(shift.GhiChu ?? "-")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="performance-section">
+            <h4 style="color: #667eea; margin-bottom: 15px;">
+                <i class="fas fa-award"></i> Đánh giá hiệu suất
+            </h4>
+            <div class="performance-bar">
+                <div class="performance-fill" style="width: @(ViewBag.PerformanceScore ?? 0)%;"></div>
+            </div>
+            <p style="color: #666; margin-top: 10px;">
+                Bạn đã hoàn thành <strong>@ViewBag.TotalShifts ca</strong> trong tháng này.
+                Tiếp tục phát huy!
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="fas fa-chart-bar"></i>
+            <h3 style="color: #999;">Chưa có dữ liệu</h3>
+            <p style="color: #999;">Chọn tháng để xem thống kê làm việc</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+    async function loadStats() {
+        const month = document.getElementById('selectedMonth').value;
+        if (!month) {
+            alert('Vui lòng chọn tháng');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/Staff/WorkStats?month=${month}`);
+            if (response.ok) {
+                location.href = `/Staff/WorkStats?month=${month}`;
+            }
+        } catch (error) {
+            alert('Lỗi tải thống kê: ' + error.message);
+        }
+    }
+
+    // Animate performance bar on load
+    window.addEventListener('load', function() {
+        const performanceFill = document.querySelector('.performance-fill');
+        if (performanceFill) {
+            const targetWidth = performanceFill.style.width;
+            performanceFill.style.width = '0%';
+            setTimeout(() => {
+                performanceFill.style.width = targetWidth;
+            }, 300);
+        }
+    });
+</script>
+}

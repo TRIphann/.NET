@@ -49,7 +49,7 @@
                 <th>Giới tính</th>
                 <th>SĐT</th>
                 <th>Username</th>
-                <th>Số tour</th>
+                <th>Số ca</th>
                 <th>Hành động</th>
             </tr>
         </thead>
@@ -59,17 +59,17 @@
             <tr>
                 <td>
                     <img src="~/@(emp.AnhDaiDien ?? "images/avatars/default.jpg")"
-                         alt="@emp.TenNV"
+                         alt="@emp.HoTen"
                          class="avatar-small"
                          loading="lazy"
                          onerror="this.src='/images/avatars/default.jpg'" />
                 </td>
                 <td>#@emp.MaNV</td>
-                <td>@emp.TenNV</td>
+                <td>@emp.HoTen</td>
                 <td>@emp.GioiTinh</td>
                 <td>@emp.SDT</td>
                 <td>@(emp.Username ?? "N/A")</td>
-                <td>@emp.SoTour</td>
+                <td>@emp.SoCa</td>
                 <td>
                     <button class="btn btn-sm btn-primary" onclick="viewEmployeeDetail(@emp.MaNV)">
                         <i class="fas fa-eye"></i> Xem
@@ -313,12 +313,12 @@ else if (currentTab == "customers")
                         <div class="detail-card">
                             <div class="detail-header">
                                 <img src="/images/${empData.anhDaiDien || 'avatars/default.jpg'}"
-                                     alt="${empData.tenNV}"
+                                     alt="${empData.hoTen}"
                                      class="detail-avatar"
                                      onerror="this.src='/images/avatars/default.jpg'" />
                                 <div class="detail-info">
-                                    <h2>${empData.tenNV}</h2>
-                                    <p><i class="fas fa-briefcase"></i> ${empData.vaiTro || 'Hướng dẫn viên'}</p>
+                                    <h2>${empData.hoTen}</h2>
+                                    <p><i class="fas fa-briefcase"></i> ${empData.vaiTro || 'Nhân viên'}</p>
                                     <p><i class="fas fa-user-circle"></i> Username: ${empData.username || 'N/A'}</p>
                                 </div>
                             </div>
@@ -335,8 +335,8 @@ else if (currentTab == "customers")
                                 <span class="info-value">${empData.diaChi || 'N/A'}</span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label"><i class="fas fa-list"></i> Số tour:</span>
-                                <span class="info-value">${empData.soTour}</span>
+                                <span class="info-label"><i class="fas fa-list"></i> Số ca:</span>
+                                <span class="info-value">${empData.soCa}</span>
                             </div>
                             ${toursHtml}
                         </div>

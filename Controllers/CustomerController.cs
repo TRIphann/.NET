@@ -16,10 +16,10 @@ namespace QLDuLichRBAC_Upgrade.Controllers
 {
     public class CustomerController : Controller
     {
-        private readonly QLDuLichContext _context;
+        private readonly QLJumaparenaContext _context;
         private readonly PaymentService _paymentService;
 
-        public CustomerController(QLDuLichContext context, PaymentService paymentService)
+        public CustomerController(QLJumaparenaContext context, PaymentService paymentService)
         {
             _context = context;
             _paymentService = paymentService;

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Jumparena Staff</title>
+    <link rel="stylesheet" href="~/css/guide-layout.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        /* Jumparena theme colors */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+        }
+
+        .guide-sidebar {
+            background: var(--primary-gradient);
+        }
+
+        .sidebar-menu a.active,
+        .sidebar-menu a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .alert-custom {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+
+        .btn-ticket {
+            padding: 10px 20px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .btn-ticket:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-view-detail {
+            background: var(--success-gradient);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="guide-layout">
+        <!-- Sidebar -->
+        <nav class="guide-sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-user-tie"></i> Jumparena Staff</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="@Url.Action("MySchedule", "Attendance")" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Attendance" ? "active" : "")">
+                        <i class="fas fa-clock"></i>
+                        <span>Lịch Trực & Điểm Danh</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("MySchedule", "Staff")" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "MySchedule" && ViewContext.RouteData.Values["controller"]?.ToString() == "Staff" ? "active" : "")">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Lịch làm việc</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("CheckInTickets", "Staff")" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "CheckInTickets" ? "active" : "")">
+                        <i class="fas fa-qrcode"></i>
+                        <span>Check-in vé</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("Activities", "Staff")" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Activities" ? "active" : "")">
+                        <i class="fas fa-running"></i>
+                        <span>Hoạt động</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("WorkStats", "Staff")" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "WorkStats" ? "active" : "")">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Thống kê</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("Profile", "Staff")" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Profile" ? "active" : "")">
+                        <i class="fas fa-user"></i>
+                        <span>Hồ sơ cá nhân</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <a href="@Url.Action("Logout", "Account")" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="guide-content">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert-custom alert-success">
+                    <i class="fas fa-check-circle"></i> @TempData["Success"]
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert-custom alert-error">
+                    <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+                </div>
+            }
+
+            @RenderBody()
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    @RenderSection("Scripts", required: false)
+
+</body>
+</html>

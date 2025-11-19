@@ -4,7 +4,7 @@ using System.Text;
 namespace QLDuLichRBAC_Upgrade.Utils
 {
     /// <summary>
-    /// Helper class cho xác th?c và b?o m?t
+    /// Helper class cho xï¿½c th?c vï¿½ b?o m?t
     /// </summary>
     public static class AuthHelper
     {
@@ -14,7 +14,7 @@ namespace QLDuLichRBAC_Upgrade.Utils
         public static string HashPassword(string password)
         {
             if (string.IsNullOrWhiteSpace(password))
-                throw new ArgumentException("M?t kh?u không ???c ?? tr?ng", nameof(password));
+                throw new ArgumentException("M?t kh?u khï¿½ng ???c ?? tr?ng", nameof(password));
 
             using var sha = SHA256.Create();
             var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
@@ -22,7 +22,7 @@ namespace QLDuLichRBAC_Upgrade.Utils
         }
 
         /// <summary>
-        /// Sanitize input ?? tránh XSS
+        /// Sanitize input ?? trï¿½nh XSS
         /// </summary>
         public static string SanitizeInput(string input)
         {
@@ -36,6 +36,15 @@ namespace QLDuLichRBAC_Upgrade.Utils
                 .Replace("'", "&#x27;")
                 .Replace("/", "&#x2F;")
                 .Trim();
+        }
+
+        /// <summary>
+        /// Kiá»ƒm tra user Ä‘Ã£ Ä‘Äƒng nháº­p chÆ°a
+        /// </summary>
+        public static bool IsAuthenticated(Microsoft.AspNetCore.Http.HttpContext context)
+        {
+            var username = context.Session.GetString("Username");
+            return !string.IsNullOrEmpty(username);
         }
     }
 }

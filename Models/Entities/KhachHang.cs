@@ -21,5 +21,8 @@ namespace QLDuLichRBAC_Upgrade.Models.Entities
 
         public int? UserId { get; set; }
         [ForeignKey("UserId")] public User? User { get; set; }
+
+        // Navigation properties
+        public ICollection<HoaDon>? HoaDon { get; set; }
     }
 }

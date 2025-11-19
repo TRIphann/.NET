@@ -5,14 +5,14 @@ using QRCoder;
 namespace QLDuLichRBAC_Upgrade.Services
 {
     /// <summary>
-    /// Service x? lý thanh toán qua VietQR và SePay
+    /// Service x? lï¿½ thanh toï¿½n qua VietQR vï¿½ SePay
     /// </summary>
     public class PaymentService
     {
         private readonly HttpClient _httpClient;
         private const string SEPAY_API_URL = "https://my.sepay.vn/userapi";
         private const string SEPAY_API_KEY = "YOUR_SEPAY_API_KEY"; // TODO: Thay b?ng key th?t
-        private const string SEPAY_ACCOUNT_NUMBER = "YOUR_ACCOUNT_NUMBER"; // TODO: Thay s? tài kho?n
+        private const string SEPAY_ACCOUNT_NUMBER = "YOUR_ACCOUNT_NUMBER"; // TODO: Thay s? tï¿½i kho?n
         private const string SEPAY_BANK_CODE = "970437"; // MB Bank
 
         public PaymentService(HttpClient httpClient)
@@ -21,12 +21,31 @@ namespace QLDuLichRBAC_Upgrade.Services
         }
 
         /// <summary>
-        /// T?o mã giao d?ch duy nh?t
+        /// Táº¡o mÃ£ giao dá»‹ch duy nháº¥t
         /// </summary>
         public string GenerateTransactionCode(int userId, int tourId)
         {
             long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             return $"TOUR_PAY{userId}_{tourId}_{timestamp}";
+        }
+
+        /// <summary>
+        /// Táº¡o mÃ£ giao dá»‹ch cho vÃ© Jumparena
+        /// </summary>
+        public string GenerateTicketTransactionCode(int userId, int packageId)
+        {
+            long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            return $"JUMP{userId}{packageId}{timestamp}";
+        }
+
+        /// <summary>
+        /// Táº¡o mÃ£ vÃ© duy nháº¥t (QR Code)
+        /// </summary>
+        public string GenerateTicketCode(int userId, int packageId)
+        {
+            string guid = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
+            long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            return $"JPA{userId:D4}{packageId:D3}{guid}";
         }
 
         /// <summary>
@@ -84,7 +103,7 @@ namespace QLDuLichRBAC_Upgrade.Services
         }
 
         /// <summary>
-        /// Tính CRC16 cho VietQR
+        /// Tï¿½nh CRC16 cho VietQR
         /// </summary>
         private string CalculateCRC16(string data)
         {
@@ -112,7 +131,7 @@ namespace QLDuLichRBAC_Upgrade.Services
         }
 
         /// <summary>
-        /// T?o QR Code t? chu?i VietQR và tr? v? base64
+        /// T?o QR Code t? chu?i VietQR vï¿½ tr? v? base64
         /// </summary>
         public string GenerateQRCodeBase64(string qrData, int pixelSize = 300)
         {
@@ -155,7 +174,7 @@ namespace QLDuLichRBAC_Upgrade.Services
                         if (transaction.transaction_content.Contains(memo) && 
                             transaction.amount_in == amount)
                         {
-                            Console.WriteLine($"? Tìm th?y giao d?ch: {transaction.transaction_content}");
+                            Console.WriteLine($"? Tï¿½m th?y giao d?ch: {transaction.transaction_content}");
                             return true;
                         }
                     }
@@ -171,7 +190,7 @@ namespace QLDuLichRBAC_Upgrade.Services
         }
 
         /// <summary>
-        /// T?o thông tin thanh toán ??y ??
+        /// T?o thï¿½ng tin thanh toï¿½n ??y ??
         /// </summary>
         public PaymentInfo CreatePaymentInfo(int userId, int tourId, decimal amount, string tourName)
         {
@@ -194,12 +213,39 @@ namespace QLDuLichRBAC_Upgrade.Services
                 CreatedAt = DateTime.Now
             };
         }
+
+        /// <summary>
+        /// T?o thï¿½ng tin thanh toï¿½n cho vï¿½ Jumparena
+        /// </summary>
+        public JumparenaPaymentInfo CreateJumparenaPaymentInfo(int userId, int packageId, decimal amount, string packageName)
+        {
+            string transactionCode = GenerateTicketTransactionCode(userId, packageId);
+            string ticketCode = GenerateTicketCode(userId, packageId);
+            string qrData = GenerateVietQRData(
+                SEPAY_ACCOUNT_NUMBER,
+                SEPAY_BANK_CODE,
+                (int)amount,
+                transactionCode
+            );
+            string qrBase64 = GenerateQRCodeBase64(qrData);
+
+            return new JumparenaPaymentInfo
+            {
+                TransactionCode = transactionCode,
+                TicketCode = ticketCode,
+                Amount = amount,
+                QRCodeBase64 = qrBase64,
+                QRData = qrData,
+                PackageName = packageName,
+                CreatedAt = DateTime.Now
+            };
+        }
     }
 
     // DTO cho SePay API Response
     public class SePayTransactionResponse
     {
-        public List<SePayTransaction>? transactions { get; set; }
+        public List<SePayTransaction> transactions { get; set; }
     }
 
     public class SePayTransaction
@@ -209,7 +255,7 @@ namespace QLDuLichRBAC_Upgrade.Services
         public string transaction_date { get; set; } = string.Empty;
     }
 
-    // Model thông tin thanh toán
+    // Model thÃ´ng tin thanh toÃ¡n
     public class PaymentInfo
     {
         public string TransactionCode { get; set; } = string.Empty;
@@ -217,6 +263,18 @@ namespace QLDuLichRBAC_Upgrade.Services
         public string QRCodeBase64 { get; set; } = string.Empty;
         public string QRData { get; set; } = string.Empty;
         public string TourName { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+    }
+
+    // Model thÃ´ng tin thanh toÃ¡n Jumparena
+    public class JumparenaPaymentInfo
+    {
+        public string TransactionCode { get; set; } = string.Empty;
+        public string TicketCode { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public string QRCodeBase64 { get; set; } = string.Empty;
+        public string QRData { get; set; } = string.Empty;
+        public string PackageName { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
     }
 }

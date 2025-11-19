@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using QLDuLichRBAC_Upgrade.Models;
 using QLDuLichRBAC_Upgrade.Models.Entities;
 using QLDuLichRBAC_Upgrade.Utils;
@@ -8,8 +8,8 @@ namespace QLDuLichRBAC_Upgrade.Controllers
 {
     public class RegisterController : Controller
     {
-        private readonly QLDuLichContext _context;
-        public RegisterController(QLDuLichContext context)
+        private readonly QLJumaparenaContext _context;
+        public RegisterController(QLJumaparenaContext context)
         {
             _context = context;
         }
@@ -23,7 +23,7 @@ namespace QLDuLichRBAC_Upgrade.Controllers
         [HttpPost]
         public IActionResult Index(string Username, string Password, string FullName, string Email, string Phone)
         {
-            // Validate tất cả các trường
+            // Validate t?t c? c�c tru?ng
             var validation = ValidationHelper.ValidateRegistration(Username, Password, FullName, Email, Phone);
             if (!validation.IsValid)
             {
@@ -37,15 +37,15 @@ namespace QLDuLichRBAC_Upgrade.Controllers
             Email = AuthHelper.SanitizeInput(Email);
             Phone = AuthHelper.SanitizeInput(Phone);
 
-            // Kiểm tra username đã tồn tại
-            if (_context.Users.Any(u => u.Username == Username))
+            // Ki?m tra username d� t?n t?i
+            if (_context.User.Any(u => u.Username == Username))
             {
                 ViewBag.ErrorAlert = AlertHelper.Error("Username already exists!");
                 return View("~/Views/Account/Register.cshtml");
             }
 
-            // Kiểm tra email đã tồn tại
-            if (_context.Users.Any(u => u.Email == Email))
+            // Ki?m tra email d� t?n t?i
+            if (_context.User.Any(u => u.Email == Email))
             {
                 ViewBag.ErrorAlert = AlertHelper.Error("Email already in use!");
                 return View("~/Views/Account/Register.cshtml");
@@ -63,10 +63,10 @@ namespace QLDuLichRBAC_Upgrade.Controllers
                 Phone = Phone,
                 Role = "Customer"
             };
-            _context.Users.Add(user);
+            _context.User.Add(user);
             _context.SaveChanges();
 
-            // Tạo bản ghi KhachHang liên kết
+            // T?o b?n ghi KhachHang li�n k?t
             var newKH = new KhachHang
             {
                 MaKH = _context.KhachHang.Any() ? _context.KhachHang.Max(k => k.MaKH) + 1 : 1,

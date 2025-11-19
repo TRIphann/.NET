@@ -1,0 +1,320 @@
+@model IEnumerable<QLDuLichRBAC_Upgrade.Models.Entities.TroChoi>
+
+@{
+    ViewData["Title"] = "Hoạt động - Jumparena Staff";
+    Layout = "~/Views/Shared/_StaffLayout.cshtml";
+}
+
+<style>
+    .activities-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 50px 20px;
+        text-align: center;
+        margin: -20px -20px 40px -20px;
+        border-radius: 0 0 30px 30px;
+    }
+
+    .activities-hero h1 {
+        font-size: 2.5em;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .filter-section {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        padding: 10px 20px;
+        border: 2px solid #667eea;
+        background: white;
+        color: #667eea;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .activities-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+
+    .activity-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    .activity-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+    }
+
+    .activity-header {
+        padding: 25px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .activity-title {
+        font-size: 1.5em;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .activity-category {
+        display: inline-block;
+        padding: 5px 15px;
+        background: rgba(255,255,255,0.3);
+        border-radius: 20px;
+        font-size: 0.9em;
+    }
+
+    .activity-body {
+        padding: 25px;
+    }
+
+    .activity-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        padding: 12px;
+        background: #f8f9ff;
+        border-radius: 10px;
+    }
+
+    .activity-info i {
+        font-size: 1.3em;
+        color: #667eea;
+        margin-right: 12px;
+        width: 25px;
+        text-align: center;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .difficulty-badge {
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9em;
+    }
+
+    .difficulty-easy {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .difficulty-medium {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .difficulty-hard {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .safety-section {
+        margin-top: 20px;
+        padding: 15px;
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        border-radius: 8px;
+    }
+
+    .safety-title {
+        font-weight: bold;
+        color: #856404;
+        margin-bottom: 8px;
+    }
+
+    .safety-text {
+        color: #856404;
+        font-size: 0.95em;
+        line-height: 1.5;
+    }
+
+    .zones-section {
+        margin-top: 15px;
+        padding: 12px;
+        background: #e7f3ff;
+        border-radius: 8px;
+    }
+
+    .zone-tag {
+        display: inline-block;
+        padding: 5px 12px;
+        background: #667eea;
+        color: white;
+        border-radius: 15px;
+        font-size: 0.85em;
+        margin: 3px;
+    }
+</style>
+
+<div class="activities-hero">
+    <h1><i class="fas fa-running"></i> Hoạt Động & Trò Chơi</h1>
+    <p>Quản lý và giám sát các hoạt động tại Jumparena</p>
+</div>
+
+<div class="filter-section">
+    <div class="filter-tabs">
+        <button class="filter-btn active" data-filter="all">
+            <i class="fas fa-th"></i> Tất cả
+        </button>
+        <button class="filter-btn" data-filter="Trampoline">
+            <i class="fas fa-arrows-alt-v"></i> Trampoline
+        </button>
+        <button class="filter-btn" data-filter="Thử thách">
+            <i class="fas fa-fire"></i> Thử thách
+        </button>
+        <button class="filter-btn" data-filter="Kids Zone">
+            <i class="fas fa-child"></i> Kids Zone
+        </button>
+    </div>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <div class="activities-grid">
+        @foreach (var activity in Model)
+        {
+            var difficultyLevel = activity.DoKho.HasValue ? activity.DoKho.Value : 0;
+            var difficultyClass = difficultyLevel switch
+            {
+                <= 2 => "difficulty-easy",
+                <= 3 => "difficulty-medium",
+                _ => "difficulty-hard"
+            };
+            var difficultyText = difficultyLevel switch
+            {
+                <= 2 => "Dễ",
+                <= 3 => "Trung bình",
+                _ => "Khó"
+            };
+
+            <div class="activity-card" data-category="@activity.DanhMuc">
+                <div class="activity-header">
+                    <div class="activity-title">@activity.TenTroChoi</div>
+                    <span class="activity-category">
+                        @if (activity.DanhMuc == "Trampoline")
+                        {
+                            <i class="fas fa-arrows-alt-v"></i>
+                        }
+                        else if (activity.DanhMuc == "Thử thách")
+                        {
+                            <i class="fas fa-fire"></i>
+                        }
+                        else
+                        {
+                            <i class="fas fa-child"></i>
+                        }
+                        @activity.DanhMuc
+                    </span>
+                </div>
+
+                <div class="activity-body">
+                    @if (!string.IsNullOrEmpty(activity.MoTa))
+                    {
+                        <p style="color: #666; margin-bottom: 20px; line-height: 1.6;">@activity.MoTa</p>
+                    }
+
+                    <div class="activity-info">
+                        <i class="fas fa-signal"></i>
+                        <div>
+                            <div class="info-label">Độ khó</div>
+                            <span class="difficulty-badge @difficultyClass">@difficultyText (@difficultyLevel/5)</span>
+                        </div>
+                    </div>
+
+                    <div class="activity-info">
+                        <i class="fas fa-child"></i>
+                        <div>
+                            <div class="info-label">Độ tuổi</div>
+                            <div>@activity.DoTuoiToiThieu - @activity.DoTuoiToiDa tuổi</div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(activity.YeuCauAnToan))
+                    {
+                        <div class="safety-section">
+                            <div class="safety-title">
+                                <i class="fas fa-exclamation-triangle"></i> An toàn
+                            </div>
+                            <div class="safety-text">@activity.YeuCauAnToan</div>
+                        </div>
+                    }
+
+                    @if (activity.KhuVuiChoi_TroChoi != null && activity.KhuVuiChoi_TroChoi.Any())
+                    {
+                        <div class="zones-section">
+                            <strong style="color: #667eea;">
+                                <i class="fas fa-map-marker-alt"></i> Khu vực:
+                            </strong>
+                            @foreach (var zone in activity.KhuVuiChoi_TroChoi)
+                            {
+                                <span class="zone-tag">@zone.KhuVuiChoi?.TenKhu</span>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div style="text-align: center; padding: 80px 20px;">
+        <i class="fas fa-inbox" style="font-size: 5em; color: #ddd; margin-bottom: 20px;"></i>
+        <h3 style="color: #999;">Chưa có hoạt động nào</h3>
+    </div>
+}
+
+@section Scripts {
+<script>
+    // Filter functionality
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            const filter = this.getAttribute('data-filter');
+            const cards = document.querySelectorAll('.activity-card');
+
+            cards.forEach(card => {
+                if (filter === 'all' || card.getAttribute('data-category') === filter) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+}

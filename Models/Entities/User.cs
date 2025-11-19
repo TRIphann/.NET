@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QLDuLichRBAC_Upgrade.Models.Entities
 {
+    [Table("User")]
     public class User
     {
         [Key] public int UserId { get; set; }
@@ -18,6 +20,8 @@ namespace QLDuLichRBAC_Upgrade.Models.Entities
 
         [Required, StringLength(50)] public string Role { get; set; } = string.Empty;
         
+        // Navigation properties
         public NhanVien? NhanVien { get; set; }
+        public KhachHang? KhachHang { get; set; }
     }
 }

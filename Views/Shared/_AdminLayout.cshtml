@@ -21,7 +21,7 @@
 
             <ul class="sidebar-menu">
                 <li>
-                    <a href="@Url.Action("Statistics", "Admin", new { tab = "tours" })"
+                    <a href="@Url.Action("Statistics", "Admin", new { tab = "packages" })"
                        class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Statistics" ? "active" : "")">
                         <i class="fas fa-chart-line"></i>
                         <span>Thống kê</span>
@@ -32,15 +32,6 @@
                        class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Accounts" ? "active" : "")">
                         <i class="fas fa-users-cog"></i>
                         <span>Tài khoản</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="@Url.Action("Tours", "Admin")"
-                       class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Tours" || 
-                                ViewContext.RouteData.Values["action"]?.ToString() == "CreateTour" || 
-                                ViewContext.RouteData.Values["action"]?.ToString() == "EditTour" ? "active" : "")">
-                        <i class="fas fa-map-marked-alt"></i>
-                        <span>Quản lý Tour</span>
                     </a>
                 </li>
             </ul>

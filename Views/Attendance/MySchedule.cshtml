@@ -1,0 +1,688 @@
+@{
+    ViewData["Title"] = "Lịch Trực Của Tôi";
+    Layout = "~/Views/Shared/_StaffLayout.cshtml";
+}
+
+<style>
+    .schedule-container {
+        background: #fff;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+    }
+
+    .schedule-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .schedule-header h2 {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 24px;
+        font-weight: 600;
+    }
+
+    .week-navigator {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .week-btn {
+        padding: 8px 20px;
+        background: #3498db;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+
+    .week-btn:hover:not(:disabled) {
+        background: #2980b9;
+        transform: translateY(-2px);
+    }
+
+    .week-btn:disabled {
+        background: #95a5a6;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .current-week {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 16px;
+    }
+
+    /* Lịch dạng bảng - Full width ngang */
+    .schedule-grid {
+        overflow-x: auto;
+        margin-top: 20px;
+        width: 100%;
+    }
+
+    .schedule-table {
+        width: 100%;
+        min-width: 1200px;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: white;
+        table-layout: fixed;
+    }
+
+    .schedule-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .schedule-table th {
+        padding: 15px 10px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 14px;
+        border-right: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .schedule-table th:first-child {
+        width: 140px;
+    }
+
+    .schedule-table th:not(:first-child) {
+        width: calc((100% - 140px) / 7);
+    }
+
+    .schedule-table th:last-child {
+        border-right: none;
+    }
+
+    .schedule-table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .schedule-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    /* Màu cho mỗi ca - Gradient */
+    .schedule-table tbody tr:nth-child(1) td:first-child {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+    }
+
+    .schedule-table tbody tr:nth-child(2) td:first-child {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        font-weight: 600;
+    }
+
+    .schedule-table tbody tr:nth-child(3) td:first-child {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        font-weight: 600;
+    }
+
+    .schedule-table tbody tr:nth-child(4) td:first-child {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+        font-weight: 600;
+    }
+
+    .schedule-table tbody tr:nth-child(5) td:first-child {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
+        font-weight: 600;
+    }
+
+    .schedule-table tbody tr:nth-child(6) td:first-child {
+        background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        color: white;
+        font-weight: 600;
+    }
+
+    .schedule-table tbody tr:nth-child(7) td:first-child {
+        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        color: #333;
+        font-weight: 600;
+    }
+
+    .schedule-table td {
+        padding: 12px 8px;
+        text-align: center;
+        border: 1px solid #e0e0e0;
+        height: 100px;
+        position: relative;
+        vertical-align: middle;
+    }
+
+    .schedule-table td:first-child {
+        font-weight: 600;
+        font-size: 13px;
+        line-height: 1.4;
+    }
+
+    /* Highlight cột ngày hôm nay */
+    .schedule-table td.today-column {
+        background: #fff8e1 !important;
+        border: 2px solid #ffc107;
+        box-shadow: 0 0 10px rgba(255,193,7,0.3);
+    }
+
+    .schedule-table th.today-column {
+        background: #ffc107 !important;
+        color: #333 !important;
+        font-weight: 700;
+    }
+
+    /* Ô ca trực */
+    .shift-cell {
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 8px;
+    }
+
+    .shift-info {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 4px;
+    }
+
+    .shift-status {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    .status-chua-diem-danh {
+        background: #e9ecef;
+        color: #6c757d;
+    }
+
+    .status-dang-truc {
+        background: #d1ecf1;
+        color: #0c5460;
+        animation: pulse 2s infinite;
+    }
+
+    .status-da-hoan-thanh {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-di-muon {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-ve-som {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    /* Timeline bars - Hiển thị check-in/out với overflow */
+    .time-bars {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 8px;
+        background: #f0f0f0;
+        border-top: 1px solid #ddd;
+    }
+
+    .check-in-bar {
+        position: absolute;
+        left: 0;
+        height: 100%;
+        background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+        transition: all 0.3s;
+    }
+
+    .check-out-bar {
+        position: absolute;
+        right: 0;
+        height: 100%;
+        background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+        transition: all 0.3s;
+    }
+
+    /* Overflow effects */
+    .late-arrival {
+        background: linear-gradient(90deg, #ff6b6b 0%, #ff8e53 100%) !important;
+        box-shadow: 2px 0 8px rgba(255,107,107,0.5);
+    }
+
+    .early-leave {
+        background: linear-gradient(90deg, #feca57 0%, #ff9ff3 100%) !important;
+        box-shadow: -2px 0 8px rgba(254,202,87,0.5);
+    }
+
+    /* Nút action */
+    .action-btns {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 8px;
+    }
+
+    .btn-action {
+        padding: 5px 12px;
+        font-size: 11px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 600;
+    }
+
+    .btn-checkin {
+        background: #28a745;
+        color: white;
+    }
+
+    .btn-checkin:hover {
+        background: #218838;
+        transform: scale(1.05);
+    }
+
+    .btn-checkout {
+        background: #ffc107;
+        color: #333;
+    }
+
+    .btn-checkout:hover {
+        background: #e0a800;
+        transform: scale(1.05);
+    }
+
+    .btn-action:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    /* Animation */
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.7;
+        }
+    }
+
+    /* Empty cell */
+    .empty-cell {
+        color: #ccc;
+        font-style: italic;
+        font-size: 12px;
+    }
+
+    /* Register section */
+    .register-section {
+        margin-top: 30px;
+        padding: 20px;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-radius: 10px;
+    }
+
+    .register-section h3 {
+        margin-bottom: 15px;
+        color: #2c3e50;
+    }
+
+    .register-form {
+        display: flex;
+        gap: 15px;
+        align-items: end;
+    }
+
+    .form-group {
+        flex: 1;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #555;
+        font-size: 14px;
+    }
+
+    .form-group select,
+    .form-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .btn-register {
+        padding: 10px 25px;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-register:hover {
+        background: #218838;
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="schedule-container">
+    <div class="schedule-header">
+        <h2>📅 Lịch Trực Của Tôi</h2>
+        <div class="week-navigator">
+            <button class="week-btn" onclick="previousWeek()">⬅ Tuần Trước</button>
+            <span class="current-week" id="currentWeek"></span>
+            <button class="week-btn" onclick="nextWeek()">Tuần Sau ➡</button>
+        </div>
+    </div>
+
+    <div class="schedule-grid">
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th>Ca Trực</th>
+                    <th id="day-0">Thứ 2</th>
+                    <th id="day-1">Thứ 3</th>
+                    <th id="day-2">Thứ 4</th>
+                    <th id="day-3">Thứ 5</th>
+                    <th id="day-4">Thứ 6</th>
+                    <th id="day-5">Thứ 7</th>
+                    <th id="day-6">Chủ Nhật</th>
+                </tr>
+            </thead>
+            <tbody id="scheduleBody">
+                <!-- Dynamic content -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="register-section">
+        <h3>📝 Đăng Ký Lịch Trực Tuần Sau</h3>
+        <div class="register-form">
+            <div class="form-group">
+                <label>Ca trực</label>
+                <select id="registerCa">
+                    <option value="">Chọn ca</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Ngày trực</label>
+                <input type="date" id="registerDate">
+            </div>
+            <button class="btn-register" onclick="registerShift()">Đăng Ký</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const maNV = @ViewBag.MaNV;
+    let currentDate = new Date();
+    let allCas = [];
+    let allSchedules = [];
+
+    // Lấy ngày đầu tuần (Thứ 2)
+    function getMonday(d) {
+        const date = new Date(d);
+        const day = date.getDay();
+        const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+        return new Date(date.setDate(diff));
+    }
+
+    // Load ca trực
+    async function loadCas() {
+        const response = await fetch('/Staff/GetCas');
+        allCas = await response.json();
+        
+        const select = document.getElementById('registerCa');
+        select.innerHTML = '<option value="">Chọn ca</option>';
+        allCas.forEach(ca => {
+            select.innerHTML += `<option value="${ca.maCa}">${ca.tenCa} (${ca.gioBatDau} - ${ca.gioKetThuc})</option>`;
+        });
+    }
+
+    // Load lịch trực
+    async function loadSchedule() {
+        const monday = getMonday(currentDate);
+        const response = await fetch(`/Attendance/GetWeekSchedule?maNV=${maNV}&startDate=${monday.toISOString()}`);
+        allSchedules = await response.json();
+
+        updateWeekHeader(monday);
+        renderSchedule(monday);
+    }
+
+    function updateWeekHeader(monday) {
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        
+        document.getElementById('currentWeek').textContent = 
+            `${monday.toLocaleDateString('vi-VN')} - ${sunday.toLocaleDateString('vi-VN')}`;
+
+        // Update day headers và highlight today
+        const today = new Date().toISOString().split('T')[0];
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(monday);
+            date.setDate(monday.getDate() + i);
+            const dateStr = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+            const dayName = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'][i];
+            
+            const th = document.getElementById(`day-${i}`);
+            th.textContent = `${dayName} (${dateStr})`;
+            
+            if (date.toISOString().split('T')[0] === today) {
+                th.classList.add('today-column');
+            } else {
+                th.classList.remove('today-column');
+            }
+        }
+    }
+
+    function renderSchedule(monday) {
+        const tbody = document.getElementById('scheduleBody');
+        tbody.innerHTML = '';
+
+        // Group by ca
+        const caMap = {};
+        allCas.forEach(ca => {
+            caMap[ca.maCa] = { ...ca, days: {} };
+        });
+
+        allSchedules.forEach(schedule => {
+            const date = new Date(schedule.ngayLamViec);
+            const dayIndex = (date.getDay() + 6) % 7; // Convert to Mon=0
+            
+            if (!caMap[schedule.maCa]) return;
+            caMap[schedule.maCa].days[dayIndex] = schedule;
+        });
+
+        // Render rows
+        const today = new Date().toISOString().split('T')[0];
+        Object.values(caMap).forEach(ca => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${ca.tenCa}<br><small>${ca.gioBatDau} - ${ca.gioKetThuc}</small></td>`;
+
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + i);
+                const dateStr = date.toISOString().split('T')[0];
+                
+                const td = document.createElement('td');
+                if (dateStr === today) {
+                    td.classList.add('today-column');
+                }
+
+                const schedule = ca.days[i];
+                if (schedule) {
+                    td.innerHTML = renderShiftCell(schedule, ca);
+                } else {
+                    td.innerHTML = '<div class="empty-cell">-</div>';
+                }
+
+                row.appendChild(td);
+            }
+
+            tbody.appendChild(row);
+        });
+    }
+
+    function renderShiftCell(schedule, ca) {
+        const statusClass = `status-${schedule.trangThaiDiemDanh.toLowerCase().replace(/\s+/g, '-')}`;
+        
+        let timeBars = '';
+        if (schedule.thoiGianCheckIn || schedule.thoiGianCheckOut) {
+            const shiftStart = new Date(`${schedule.ngayLamViec}T${ca.gioBatDau}`);
+            const shiftEnd = new Date(`${schedule.ngayLamViec}T${ca.gioKetThuc}`);
+            
+            let checkInWidth = 0, checkOutWidth = 0;
+            let checkInClass = '', checkOutClass = '';
+
+            if (schedule.thoiGianCheckIn) {
+                const checkIn = new Date(schedule.thoiGianCheckIn);
+                const diffMin = (checkIn - shiftStart) / 60000;
+                checkInWidth = Math.min(Math.abs(diffMin) / 60 * 50, 80);
+                
+                if (diffMin > 0) {
+                    checkInClass = 'late-arrival';
+                }
+            }
+
+            if (schedule.thoiGianCheckOut) {
+                const checkOut = new Date(schedule.thoiGianCheckOut);
+                const diffMin = (shiftEnd - checkOut) / 60000;
+                checkOutWidth = Math.min(Math.abs(diffMin) / 60 * 50, 80);
+                
+                if (diffMin > 0) {
+                    checkOutClass = 'early-leave';
+                }
+            }
+
+            timeBars = `
+                <div class="time-bars">
+                    ${schedule.thoiGianCheckIn ? `<div class="check-in-bar ${checkInClass}" style="width: ${checkInWidth}%"></div>` : ''}
+                    ${schedule.thoiGianCheckOut ? `<div class="check-out-bar ${checkOutClass}" style="width: ${checkOutWidth}%"></div>` : ''}
+                </div>
+            `;
+        }
+
+        const canCheckIn = schedule.trangThaiDiemDanh === 'Chưa điểm danh';
+        const canCheckOut = schedule.trangThaiDiemDanh === 'Đang trực' || schedule.trangThaiDiemDanh === 'Đi muộn';
+
+        return `
+            <div class="shift-cell">
+                <div class="shift-info">${ca.tenCa}</div>
+                <div class="shift-status ${statusClass}">${schedule.trangThaiDiemDanh}</div>
+                <div class="action-btns">
+                    <button class="btn-action btn-checkin" 
+                            onclick="checkIn(${schedule.maNV}, ${schedule.maCa}, '${schedule.ngayLamViec}')"
+                            ${!canCheckIn ? 'disabled' : ''}>
+                        Check In
+                    </button>
+                    <button class="btn-action btn-checkout" 
+                            onclick="checkOut(${schedule.maNV}, ${schedule.maCa}, '${schedule.ngayLamViec}')"
+                            ${!canCheckOut ? 'disabled' : ''}>
+                        Check Out
+                    </button>
+                </div>
+                ${timeBars}
+            </div>
+        `;
+    }
+
+    async function checkIn(maNV, maCa, ngayLamViec) {
+        const response = await fetch('/Attendance/CheckIn', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ maNV, maCa, ngayLamViec })
+        });
+        const result = await response.json();
+        alert(result.message);
+        if (result.success) {
+            loadSchedule();
+        }
+    }
+
+    async function checkOut(maNV, maCa, ngayLamViec) {
+        const response = await fetch('/Attendance/CheckOut', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ maNV, maCa, ngayLamViec })
+        });
+        const result = await response.json();
+        alert(result.message);
+        if (result.success) {
+            loadSchedule();
+        }
+    }
+
+    async function registerShift() {
+        const maCa = document.getElementById('registerCa').value;
+        const ngayTruc = document.getElementById('registerDate').value;
+
+        if (!maCa || !ngayTruc) {
+            alert('Vui lòng chọn đầy đủ thông tin');
+            return;
+        }
+
+        const response = await fetch('/Attendance/RegisterShift', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ maNV, maCa: parseInt(maCa), ngayTruc })
+        });
+        const result = await response.json();
+        alert(result.message);
+    }
+
+    function previousWeek() {
+        const prevWeek = new Date(currentDate);
+        prevWeek.setDate(prevWeek.getDate() - 7);
+        
+        // Không cho xem tuần quá khứ
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const prevMonday = getMonday(prevWeek);
+        
+        if (prevMonday < today) {
+            alert('Không thể xem lịch tuần trước!');
+            return;
+        }
+        
+        currentDate = prevWeek;
+        loadSchedule();
+    }
+
+    function nextWeek() {
+        currentDate.setDate(currentDate.getDate() + 7);
+        loadSchedule();
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+        loadCas();
+        loadSchedule();
+        setInterval(loadSchedule, 30000); // Refresh mỗi 30s
+    });
+</script>

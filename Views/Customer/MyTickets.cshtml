@@ -1,0 +1,472 @@
+@model IEnumerable<QLDuLichRBAC_Upgrade.Models.ViewModels.MyTicketViewModel>
+
+@{
+    ViewData["Title"] = "Vé của tôi - Jumparena";
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+}
+
+<style>
+    .tickets-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 50px 20px;
+        text-align: center;
+        margin: -20px -20px 40px -20px;
+        border-radius: 0 0 30px 30px;
+    }
+
+    .tickets-hero h1 {
+        font-size: 2.5em;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .tickets-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+
+    .ticket-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border: 3px solid transparent;
+    }
+
+    .ticket-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+        border-color: #667eea;
+    }
+
+    .ticket-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px 20px;
+        position: relative;
+    }
+
+    .ticket-header.used {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    }
+
+    .ticket-header.cancelled {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    }
+
+    .ticket-status {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 8px 15px;
+        background: rgba(255,255,255,0.3);
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: bold;
+        backdrop-filter: blur(10px);
+    }
+
+    .ticket-code-display {
+        font-size: 1.8em;
+        font-weight: bold;
+        margin-bottom: 10px;
+        letter-spacing: 2px;
+    }
+
+    .ticket-package-name {
+        font-size: 1.3em;
+        opacity: 0.95;
+    }
+
+    .ticket-body {
+        padding: 25px 20px;
+    }
+
+    .ticket-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .ticket-info-item {
+        padding: 12px;
+        background: #f8f9ff;
+        border-radius: 10px;
+        border-left: 3px solid #667eea;
+    }
+
+    .ticket-info-label {
+        font-size: 0.85em;
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    .ticket-info-value {
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .qr-code-section {
+        text-align: center;
+        padding: 20px;
+        background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+        border-radius: 15px;
+        margin: 20px 0;
+    }
+
+    .qr-code-section img {
+        max-width: 200px;
+        height: auto;
+        padding: 15px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .extra-services {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 2px dashed #eee;
+    }
+
+    .service-tag {
+        display: inline-block;
+        padding: 6px 12px;
+        background: #f0f0f0;
+        border-radius: 20px;
+        margin: 5px;
+        font-size: 0.9em;
+    }
+
+    .ticket-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .btn-ticket {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 10px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-view-detail {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-view-detail:hover {
+        transform: scale(1.05);
+    }
+
+    .btn-download {
+        background: #f0f0f0;
+        color: #333;
+    }
+
+    .btn-download:hover {
+        background: #e0e0e0;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+    }
+
+    .empty-state i {
+        font-size: 5em;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+        color: #999;
+        margin-bottom: 30px;
+    }
+
+    .btn-book-now {
+        padding: 15px 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-book-now:hover {
+        transform: scale(1.05);
+        color: white;
+    }
+
+    .total-price {
+        font-size: 1.5em;
+        color: #667eea;
+        font-weight: bold;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 2px solid #f0f0f0;
+    }
+
+    .check-in-info {
+        background: #d4edda;
+        border: 2px solid #28a745;
+        border-radius: 10px;
+        padding: 12px;
+        margin-top: 15px;
+        color: #155724;
+        text-align: center;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.7);
+    }
+
+    .modal-content {
+        background-color: white;
+        margin: 5% auto;
+        padding: 30px;
+        border-radius: 20px;
+        max-width: 600px;
+        position: relative;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 20px;
+    }
+
+    .close:hover {
+        color: #000;
+    }
+</style>
+
+<div class="tickets-hero">
+    <h1><i class="fas fa-ticket-alt"></i> Vé Của Tôi</h1>
+    <p>Quản lý tất cả vé đã đặt tại Jumparena</p>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <div class="tickets-grid">
+        @foreach (var ticket in Model)
+        {
+            var headerClass = ticket.TrangThai switch
+            {
+                "Đã sử dụng" => "used",
+                "Đã hủy" => "cancelled",
+                _ => ""
+            };
+
+            <div class="ticket-card">
+                <div class="ticket-header @headerClass">
+                    <div class="ticket-status">
+                        @if (ticket.TrangThai == "Đã thanh toán")
+                        {
+                            <i class="fas fa-check-circle"></i>
+                        }
+                        else if (ticket.TrangThai == "Đã sử dụng")
+                        {
+                            <i class="fas fa-clipboard-check"></i>
+                        }
+                        else if (ticket.TrangThai == "Đã hủy")
+                        {
+                            <i class="fas fa-times-circle"></i>
+                        }
+                        @ticket.TrangThai
+                    </div>
+                    <div class="ticket-code-display">
+                        <i class="fas fa-qrcode"></i> @ticket.MaVeCode
+                    </div>
+                    <div class="ticket-package-name">@ticket.TenGoi</div>
+                </div>
+
+                <div class="ticket-body">
+                    <div class="ticket-info-grid">
+                        <div class="ticket-info-item">
+                            <div class="ticket-info-label"><i class="fas fa-calendar"></i> Ngày đặt</div>
+                            <div class="ticket-info-value">@ticket.NgayDat.ToString("dd/MM/yyyy")</div>
+                        </div>
+                        <div class="ticket-info-item">
+                            <div class="ticket-info-label"><i class="fas fa-calendar-check"></i> Ngày sử dụng</div>
+                            <div class="ticket-info-value">@ticket.NgaySuDung.ToString("dd/MM/yyyy")</div>
+                        </div>
+                        <div class="ticket-info-item">
+                            <div class="ticket-info-label"><i class="fas fa-clock"></i> Ca</div>
+                            <div class="ticket-info-value">@ticket.TenCa</div>
+                        </div>
+                        <div class="ticket-info-item">
+                            <div class="ticket-info-label"><i class="fas fa-users"></i> Số người</div>
+                            <div class="ticket-info-value">@ticket.SoNguoi người</div>
+                        </div>
+                    </div>
+
+                    @if (ticket.TrangThai == "Đã thanh toán" && !string.IsNullOrEmpty(ticket.QRCodeBase64))
+                    {
+                        <div class="qr-code-section">
+                            <p style="margin-bottom: 10px; color: #666;">
+                                <i class="fas fa-qrcode"></i> Mã QR check-in
+                            </p>
+                            <img src="data:image/png;base64,@ticket.QRCodeBase64" alt="QR Code vé" />
+                            <p style="margin-top: 10px; font-size: 0.9em; color: #999;">
+                                Xuất trình mã này tại quầy
+                            </p>
+                        </div>
+                    }
+
+                    @if (ticket.NgayCheckIn.HasValue)
+                    {
+                        <div class="check-in-info">
+                            <i class="fas fa-check-circle"></i> Đã check-in: @ticket.NgayCheckIn.Value.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                    }
+
+                    @if (ticket.DichVuThem.Any())
+                    {
+                        <div class="extra-services">
+                            <p style="color: #666; margin-bottom: 10px;">
+                                <i class="fas fa-concierge-bell"></i> Dịch vụ thêm:
+                            </p>
+                            @foreach (var dv in ticket.DichVuThem)
+                            {
+                                <span class="service-tag">
+                                    @dv.TenDV (@dv.DonGia.ToString("N0")₫)
+                                </span>
+                            }
+                        </div>
+                    }
+
+                    <div class="total-price">
+                        <i class="fas fa-receipt"></i> Tổng: @ticket.TongTien.ToString("N0")₫
+                    </div>
+
+                    <div class="ticket-actions">
+                        <button class="btn-ticket btn-view-detail" onclick="viewTicketDetail(@ticket.MaVe, '@ticket.MaVeCode', '@ticket.TenGoi', '@ticket.TenCa', '@ticket.NgaySuDung.ToString("dd/MM/yyyy")', @ticket.SoNguoi, @ticket.TongTien, '@ticket.QRCodeBase64')">
+                            <i class="fas fa-eye"></i> Chi tiết
+                        </button>
+                        <button class="btn-ticket btn-download" onclick="downloadQRCode('@ticket.QRCodeBase64', '@ticket.MaVeCode')">
+                            <i class="fas fa-download"></i> Tải QR
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="empty-state">
+        <i class="fas fa-ticket-alt"></i>
+        <h3>Bạn chưa có vé nào</h3>
+        <p style="color: #999; margin-bottom: 30px;">Hãy đặt vé ngay để trải nghiệm Jumparena!</p>
+        <a href="/Customer/BookTickets" class="btn-book-now">
+            <i class="fas fa-shopping-cart"></i> Đặt vé ngay
+        </a>
+    </div>
+}
+
+<!-- Modal chi tiết vé -->
+<div id="ticketDetailModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div id="ticketDetailContent"></div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function viewTicketDetail(id, code, packageName, timeSlot, date, people, total, qrCode) {
+        const content = `
+            <h2 style="color: #667eea; margin-bottom: 20px;">
+                <i class="fas fa-ticket-alt"></i> Chi tiết vé
+            </h2>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <img src="data:image/png;base64,${qrCode}" style="max-width: 300px; padding: 20px; background: #f8f9ff; border-radius: 15px;" />
+            </div>
+
+            <div style="background: #f8f9ff; padding: 25px; border-radius: 15px;">
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #666;">Mã vé:</strong><br>
+                    <span style="font-size: 1.5em; color: #667eea; font-weight: bold;">${code}</span>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #666;">Gói dịch vụ:</strong><br>
+                    <span style="font-size: 1.2em;">${packageName}</span>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #666;">Ca:</strong> ${timeSlot}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #666;">Ngày sử dụng:</strong> ${date}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #666;">Số người:</strong> ${people} người
+                </div>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #ddd;">
+                    <strong style="color: #666;">Tổng tiền:</strong><br>
+                    <span style="font-size: 1.8em; color: #667eea; font-weight: bold;">${total.toLocaleString('vi-VN')}₫</span>
+                </div>
+            </div>
+
+            <div style="background: #fff3cd; padding: 20px; border-radius: 10px; margin-top: 20px; border: 2px solid #ffc107;">
+                <strong style="color: #856404;">
+                    <i class="fas fa-info-circle"></i> Lưu ý quan trọng:
+                </strong>
+                <ul style="margin: 10px 0; padding-left: 20px; color: #856404;">
+                    <li>Vui lòng đến trước giờ bắt đầu ca 15 phút</li>
+                    <li>Xuất trình mã QR này tại quầy check-in</li>
+                    <li>Mang theo giày thể thao và tất</li>
+                    <li>Trẻ em dưới 12 tuổi cần có người lớn đi kèm</li>
+                </ul>
+            </div>
+        `;
+        
+        document.getElementById('ticketDetailContent').innerHTML = content;
+        document.getElementById('ticketDetailModal').style.display = 'block';
+    }
+
+    function downloadQRCode(base64, ticketCode) {
+        const link = document.createElement('a');
+        link.href = 'data:image/png;base64,' + base64;
+        link.download = `Jumparena_Ticket_${ticketCode}.png`;
+        link.click();
+    }
+
+    function closeModal() {
+        document.getElementById('ticketDetailModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('ticketDetailModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+</script>
+}

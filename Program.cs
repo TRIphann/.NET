@@ -1,11 +1,23 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QLDuLichRBAC_Upgrade.Models;
 using QLDuLichRBAC_Upgrade.Services;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ===== CẤU HÌNH DỊCH VỤ =====
-builder.Services.AddControllersWithViews();
+// Cấu hình Encoding UTF-8 cho Vietnamese
+builder.Services.Configure<Microsoft.Extensions.WebEncoders.WebEncoderOptions>(options =>
+{
+    options.TextEncoderSettings = new System.Text.Encodings.Web.TextEncoderSettings(UnicodeRanges.All);
+});
+
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(UnicodeRanges.All);
+    });
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -14,8 +26,8 @@ builder.Services.AddSession(options =>
 });
 
 // Kết nối Database
-builder.Services.AddDbContext<QLDuLichContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("QLDuLich")));
+builder.Services.AddDbContext<QLJumaparenaContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("QLJumparena")));
 
 // ✅ Đăng ký PaymentService
 builder.Services.AddHttpClient<PaymentService>();

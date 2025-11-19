@@ -1,0 +1,357 @@
+@model QLDuLichRBAC_Upgrade.Models.Entities.NhanVien
+
+@{
+    ViewData["Title"] = "Hồ sơ - Jumparena Staff";
+    Layout = "~/Views/Shared/_StaffLayout.cshtml";
+}
+
+<style>
+    .profile-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 50px 20px;
+        text-align: center;
+        margin: -20px -20px 40px -20px;
+        border-radius: 0 0 30px 30px;
+    }
+
+    .profile-hero h1 {
+        font-size: 2.5em;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .profile-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .profile-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    .avatar-section {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .avatar-container {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 20px;
+    }
+
+    .avatar-image {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 5px solid #667eea;
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .avatar-upload-btn {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+        border: 3px solid white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
+
+    .avatar-upload-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .info-section {
+        margin-bottom: 40px;
+    }
+
+    .info-section h3 {
+        color: #667eea;
+        font-size: 1.5em;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid #667eea;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .info-item {
+        padding: 20px;
+        background: #f8f9ff;
+        border-radius: 12px;
+        border-left: 4px solid #667eea;
+    }
+
+    .info-label {
+        color: #666;
+        font-size: 0.9em;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .info-value {
+        color: #333;
+        font-size: 1.2em;
+        font-weight: bold;
+    }
+
+    .btn-edit {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-edit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 1em;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .edit-mode {
+        display: none;
+    }
+
+    .edit-mode.active {
+        display: block;
+    }
+
+    .view-mode.hidden {
+        display: none;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+    }
+
+    .btn-save, .btn-cancel {
+        flex: 1;
+        padding: 15px;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+    }
+
+    .btn-cancel {
+        background: #f0f0f0;
+        color: #666;
+    }
+</style>
+
+<div class="profile-hero">
+    <h1><i class="fas fa-user-circle"></i> Hồ Sơ Nhân Viên</h1>
+    <p>Quản lý thông tin cá nhân của bạn</p>
+</div>
+
+<div class="profile-container">
+    <div class="profile-card">
+        <div class="avatar-section">
+            <h2 style="color: #667eea; margin-bottom: 5px;">@Model?.HoTen</h2>
+            <p style="color: #666;">
+                <i class="fas fa-id-badge"></i> Mã NV: <strong>@Model?.MaNV</strong>
+            </p>
+        </div>
+
+        <!-- View Mode -->
+        <div class="view-mode" id="viewMode">
+            <div class="info-section">
+                <h3><i class="fas fa-info-circle"></i> Thông tin cá nhân</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="fas fa-envelope"></i> Email
+                        </div>
+                        <div class="info-value">@(Model?.Email ?? "Chưa cập nhật")</div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="fas fa-phone"></i> Số điện thoại
+                        </div>
+                        <div class="info-value">@(Model?.SDT ?? "Chưa cập nhật")</div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="fas fa-calendar"></i> Ngày sinh
+                        </div>
+                        <div class="info-value">
+                            @(Model?.NgaySinh?.ToString("dd/MM/yyyy") ?? "Chưa cập nhật")
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">
+                            <i class="fas fa-venus-mars"></i> Giới tính
+                        </div>
+                        <div class="info-value">@(Model?.GioiTinh ?? "Chưa cập nhật")</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3><i class="fas fa-map-marker-alt"></i> Địa chỉ</h3>
+                <div class="info-item">
+                    <div class="info-value">@(Model?.DiaChi ?? "Chưa cập nhật")</div>
+                </div>
+            </div>
+
+            <button type="button" class="btn-edit" onclick="toggleEditMode()">
+                <i class="fas fa-edit"></i> Chỉnh sửa thông tin
+            </button>
+        </div>
+
+        <!-- Edit Mode -->
+        <div class="edit-mode" id="editMode">
+            <form asp-action="UpdateProfile" method="post" enctype="multipart/form-data">
+                <input type="hidden" asp-for="MaNV" />
+
+                <div class="info-section">
+                    <h3><i class="fas fa-edit"></i> Chỉnh sửa thông tin</h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="HoTen">
+                            <i class="fas fa-user"></i> Họ và tên
+                        </label>
+                        <input type="text" class="form-control" id="HoTen" asp-for="HoTen" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="Email">
+                            <i class="fas fa-envelope"></i> Email
+                        </label>
+                        <input type="email" class="form-control" id="Email" asp-for="Email" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="SDT">
+                            <i class="fas fa-phone"></i> Số điện thoại
+                        </label>
+                        <input type="tel" class="form-control" id="SDT" asp-for="SDT" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="NgaySinh">
+                            <i class="fas fa-calendar"></i> Ngày sinh
+                        </label>
+                        <input type="date" class="form-control" id="NgaySinh" asp-for="NgaySinh" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="GioiTinh">
+                            <i class="fas fa-venus-mars"></i> Giới tính
+                        </label>
+                        <select class="form-control" id="GioiTinh" asp-for="GioiTinh">
+                            <option value="">Chọn giới tính</option>
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="DiaChi">
+                            <i class="fas fa-map-marker-alt"></i> Địa chỉ
+                        </label>
+                        <textarea class="form-control" id="DiaChi" asp-for="DiaChi" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-check"></i> Lưu thay đổi
+                    </button>
+                    <button type="button" class="btn-cancel" onclick="toggleEditMode()">
+                        <i class="fas fa-times"></i> Hủy
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function toggleEditMode() {
+        const viewMode = document.getElementById('viewMode');
+        const editMode = document.getElementById('editMode');
+        
+        if (viewMode.classList.contains('hidden')) {
+            viewMode.classList.remove('hidden');
+            editMode.classList.remove('active');
+        } else {
+            viewMode.classList.add('hidden');
+            editMode.classList.add('active');
+        }
+    }
+
+    function previewAvatar(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('avatarPreview').src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+}

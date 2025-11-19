@@ -7,10 +7,10 @@ namespace QLDuLichRBAC_Upgrade.Controllers
 {
     public class AdminController : Controller
     {
-        private readonly QLDuLichContext _context;
+        private readonly QLJumaparenaContext _context;
         private readonly IWebHostEnvironment _environment;
 
-        public AdminController(QLDuLichContext context, IWebHostEnvironment environment)
+        public AdminController(QLJumaparenaContext context, IWebHostEnvironment environment)
         {
             _context = context;
             _environment = environment;

@@ -1,0 +1,332 @@
+@model IEnumerable<QLDuLichRBAC_Upgrade.Models.Entities.NhanVien_Ca>
+
+@{
+    ViewData["Title"] = "Lịch làm việc - Jumparena Staff";
+    Layout = "~/Views/Shared/_StaffLayout.cshtml";
+    var startDate = ViewBag.StartDate as DateTime? ?? DateTime.Today;
+    var endDate = ViewBag.EndDate as DateTime? ?? startDate.AddDays(6);
+    var today = DateTime.Today;
+    var nextWeekStart = today.AddDays(7);
+    var twoWeeksLater = today.AddDays(14);
+    var isReadOnly = startDate < nextWeekStart; // Tuần trước + tuần hiện tại = read-only
+    var canRegister = startDate >= nextWeekStart && startDate < twoWeeksLater.AddDays(7); // 2 tuần tiếp theo
+}
+
+<style>
+    body { overflow-x: hidden; }
+    .schedule-hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px 15px; text-align: center; margin: -20px -20px 15px -20px; border-radius: 0 0 20px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .schedule-hero h1 { font-size: 1.6em; margin-bottom: 8px; font-weight: 700; }
+    .schedule-hero p { font-size: 0.95em; opacity: 0.95; margin: 4px 0; }
+    
+    .schedule-controls { display:flex; gap:12px; align-items:center; justify-content:center; margin:15px 0 20px 0; flex-wrap: wrap; }
+    .schedule-controls button, .schedule-controls input[type="date"] { padding:10px 18px; border-radius:8px; border:1px solid #ddd; font-size:0.95em; font-weight:600; transition: all 0.3s; }
+    .schedule-controls button { background:#667eea; color:white; cursor:pointer; }
+    .schedule-controls button:hover { background:#5568d3; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+    .schedule-controls button:disabled { background:#ccc; cursor:not-allowed; opacity:0.6; }
+    
+    .week-status { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 0.85em; font-weight: 600; margin-top: 8px; }
+    .week-readonly { background: #ffc107; color: #333; }
+    .week-editable { background: #28a745; color: white; }
+    .week-future { background: #6c757d; color: white; }
+
+    .week-container { 
+        display: grid; 
+        grid-template-columns: repeat(7, 1fr); 
+        gap: 12px; 
+        width: 100%; 
+        max-width: 100%;
+        margin-bottom: 25px;
+    }
+    
+    @@media (max-width: 1400px) {
+        .week-container { gap: 8px; }
+    }
+    
+    .day-column { 
+        background: #fff; 
+        border-radius: 12px; 
+        box-shadow: 0 3px 12px rgba(0,0,0,0.08); 
+        padding: 14px 10px;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s;
+        border: 2px solid transparent;
+    }
+    
+    .day-column:hover { 
+        box-shadow: 0 6px 20px rgba(102,126,234,0.2); 
+        transform: translateY(-3px);
+    }
+    
+    .day-column.today { 
+        border-color: #ffc107; 
+        background: linear-gradient(135deg, #fff9e6 0%, #fff 100%); 
+    }
+    
+    .day-column.readonly { opacity: 0.85; }
+    
+    .day-header { 
+        font-weight: 700; 
+        color: #667eea; 
+        margin-bottom: 4px; 
+        font-size: 1em;
+        text-align: center;
+    }
+    
+    .day-sub { 
+        color: #888; 
+        font-size: 0.85em; 
+        margin-bottom: 12px; 
+        text-align: center;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .shift-item { 
+        background: linear-gradient(135deg, #f7f9ff 0%, #fff 100%); 
+        padding: 10px 8px; 
+        border-radius: 10px; 
+        margin-bottom: 8px; 
+        border-left: 4px solid #667eea;
+        transition: all 0.3s;
+    }
+    
+    .shift-item:hover { 
+        background: linear-gradient(135deg, #e8ecff 0%, #f7f9ff 100%); 
+        transform: translateX(3px);
+    }
+    
+    .shift-time { 
+        font-weight: 600; 
+        color: #333; 
+        font-size: 0.9em;
+        margin-bottom: 4px;
+    }
+    
+    .shift-hours { 
+        font-size: 0.8em; 
+        color: #666; 
+    }
+    
+    .shift-status { 
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.75em;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+    
+    .status-chua { background: #e9ecef; color: #6c757d; }
+    .status-dang { background: #d1ecf1; color: #0c5460; }
+    .status-hoan-thanh { background: #d4edda; color: #155724; }
+    
+    .btn-register { 
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); 
+        color: white; 
+        border: none; 
+        padding: 8px 12px; 
+        border-radius: 8px; 
+        cursor: pointer; 
+        font-size: 0.85em;
+        font-weight: 600;
+        width: 100%;
+        margin-top: 8px;
+        transition: all 0.3s;
+    }
+    
+    .btn-register:hover { 
+        background: linear-gradient(135deg, #38f9d7 0%, #43e97b 100%); 
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(67,233,123,0.4);
+    }
+    
+    .btn-register:disabled { 
+        background: #ccc; 
+        cursor: not-allowed; 
+        opacity: 0.5;
+    }
+    
+    .empty-day { 
+        color: #bbb; 
+        text-align: center; 
+        padding: 20px 6px; 
+        font-style: italic;
+        font-size: 0.9em;
+    }
+    
+    .readonly-badge { 
+        display: inline-block;
+        background: #ffc107;
+        color: #333;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.7em;
+        font-weight: 600;
+        margin-left: 4px;
+    }
+</style>
+
+<div class="schedule-hero">
+    <h1><i class="fas fa-calendar-alt"></i> Lịch Làm Việc</h1>
+    <p>Xin chào, <strong>@ViewBag.StaffName</strong>!</p>
+    <p style="font-size:0.9em;">Tuần: @startDate.ToString("dd/MM/yyyy") - @endDate.ToString("dd/MM/yyyy")</p>
+    @if (isReadOnly)
+    {
+        <span class="week-status week-readonly">
+            <i class="fas fa-lock"></i> Chế độ xem (Tuần đã qua/hiện tại)
+        </span>
+    }
+    else if (canRegister)
+    {
+        <span class="week-status week-editable">
+            <i class="fas fa-edit"></i> Có thể đăng ký ca trực
+        </span>
+    }
+    else
+    {
+        <span class="week-status week-future">
+            <i class="fas fa-clock"></i> Quá xa (chỉ xem 2 tuần tới)
+        </span>
+    }
+    <div class="schedule-controls">
+        <form method="get" style="display:inline;">
+            <input type="hidden" name="startDate" value="@startDate.AddDays(-7).ToString("yyyy-MM-dd")" />
+            <button type="submit">◀ Tuần trước</button>
+        </form>
+
+        <form method="get" style="display:inline;">
+            <input type="date" name="startDate" value="@startDate.ToString("yyyy-MM-dd")" max="@twoWeeksLater.AddDays(13).ToString("yyyy-MM-dd")" />
+            <button type="submit">Chuyển tới</button>
+        </form>
+
+        <form method="get" style="display:inline;">
+            <input type="hidden" name="startDate" value="@startDate.AddDays(7).ToString("yyyy-MM-dd")" />
+            <button type="submit" @(startDate >= twoWeeksLater.AddDays(7) ? "disabled" : "")>Tuần sau ▶</button>
+        </form>
+    </div>
+</div>
+
+@{
+    // Prepare a map day -> shifts
+    var shifts = Model?.GroupBy(s => s.NgayLamViec.Date).ToDictionary(g => g.Key, g => g.ToList())
+              ?? new Dictionary<DateTime, List<QLDuLichRBAC_Upgrade.Models.Entities.NhanVien_Ca>>();
+}
+
+<div class="week-container">
+    @for (var d = startDate.Date; d <= endDate.Date; d = d.AddDays(1))
+    {
+        var dayShifts = shifts.ContainsKey(d) ? shifts[d] : new List<QLDuLichRBAC_Upgrade.Models.Entities.NhanVien_Ca>();
+        var isToday = d.Date == DateTime.Today;
+        var isDayReadOnly = d < nextWeekStart;
+        var canRegisterDay = d >= nextWeekStart && d < twoWeeksLater;
+        
+        <div class="day-column @(isToday ? "today" : "") @(isDayReadOnly ? "readonly" : "")">
+            <div class="day-header">
+                @d.ToString("ddd", new System.Globalization.CultureInfo("vi-VN")).ToUpper()
+                @if (isToday)
+                {
+                    <span style="color:#ffc107; margin-left:4px;">●</span>
+                }
+            </div>
+            <div class="day-sub">
+                @d.ToString("dd/MM/yyyy")
+                @if (isDayReadOnly)
+                {
+                    <span class="readonly-badge">Chỉ xem</span>
+                }
+            </div>
+
+            @if (dayShifts.Any())
+            {
+                foreach (var s in dayShifts)
+                {
+                    <div class="shift-item">
+                        <div class="shift-time">@s.Ca?.TenCa</div>
+                        <div class="shift-hours">@s.Ca?.GioBatDau.ToString("hh\\:mm") - @s.Ca?.GioKetThuc.ToString("hh\\:mm")</div>
+                        @if (!string.IsNullOrEmpty(s.TrangThaiDiemDanh))
+                        {
+                            var statusClass = "status-" + (s.TrangThaiDiemDanh.Contains("Chưa") ? "chua" : 
+                                                           s.TrangThaiDiemDanh.Contains("Đang") ? "dang" : "hoan-thanh");
+                            <div class="shift-status @statusClass">@s.TrangThaiDiemDanh</div>
+                        }
+                        @if (isToday && s.TrangThaiDiemDanh == "Chưa điểm danh")
+                        {
+                            <a href="/Staff/CheckInTickets" class="btn-register" style="margin-top:6px; padding:6px 10px; font-size:0.8em;">
+                                <i class="fas fa-qrcode"></i> Check-in
+                            </a>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty-day">
+                    <i class="fas fa-calendar-times" style="font-size:1.5em; display:block; margin-bottom:8px;"></i>
+                    Chưa có ca
+                </div>
+
+                @if (canRegisterDay)
+                {
+                    <button class="btn-register" onclick="openRegisterModal('@d.ToString("yyyy-MM-dd")')">
+                        <i class="fas fa-plus-circle"></i> Đăng ký ca
+                    </button>
+                }
+            }
+        </div>
+    }
+</div>
+
+<!-- Modal đăng ký cơ bản -->
+<div id="registerModal" style="display:none; position:fixed; left:0; right:0; top:0; bottom:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+    <div style="background:white; width:420px; margin:0 auto; border-radius:12px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+        <h3>Đăng ký ca cho <span id="regDate"></span></h3>
+        <div style="margin:10px 0;">
+            <select id="regCa" style="width:100%; padding:8px; border-radius:8px; border:1px solid #ddd;"></select>
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button onclick="closeRegisterModal()" style="padding:8px 12px; border-radius:8px;">Hủy</button>
+            <button onclick="submitRegister()" class="btn-register">Đăng ký</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    async function openRegisterModal(date) {
+        document.getElementById('registerModal').style.display = 'flex';
+        document.getElementById('regDate').innerText = new Date(date).toLocaleDateString('vi-VN');
+        // load available ca
+        const res = await fetch('/Staff/GetCas');
+        const data = await res.json();
+        const sel = document.getElementById('regCa');
+        sel.innerHTML = '';
+        data.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.maCa;
+            opt.text = `${c.tenCa} (${c.gioBatDau} - ${c.gioKetThuc})`;
+            sel.appendChild(opt);
+        });
+        sel.dataset.date = date;
+    }
+
+    function closeRegisterModal(){
+        document.getElementById('registerModal').style.display = 'none';
+    }
+
+    async function submitRegister(){
+        const sel = document.getElementById('regCa');
+        const maCa = sel.value;
+        const date = sel.dataset.date;
+        const fd = new FormData();
+        fd.append('date', date);
+        fd.append('maCa', maCa);
+
+        const res = await fetch('/Staff/RegisterShift', { method: 'POST', body: fd });
+        const data = await res.json();
+        alert(data.message);
+        if(data.success){ closeRegisterModal(); location.reload(); }
+    }
+</script>
+}
