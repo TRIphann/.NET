@@ -164,10 +164,10 @@ namespace QLDuLichRBAC_Upgrade.Models
 
             // HoaDon - Ve
             modelBuilder.Entity<HoaDon>()
-                .HasOne(h => h.Ve)
-                .WithMany(v => v.HoaDon)
-                .HasForeignKey(h => h.MaVe)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasOne(h => h.KhachHang)
+                .WithMany()
+                .HasForeignKey(h => h.MaKH)
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

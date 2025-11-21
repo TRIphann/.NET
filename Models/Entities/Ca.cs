@@ -17,15 +17,10 @@ namespace QLDuLichRBAC_Upgrade.Models.Entities
         public string TenCa { get; set; } = string.Empty;
 
         [Required]
-        [Column("ThoiGianBatDau")]
         public TimeOnly GioBatDau { get; set; }
 
         [Required]
-        [Column("ThoiGianKetThuc")]
         public TimeOnly GioKetThuc { get; set; }
-
-        [StringLength(1000)]
-        public string? MoTa { get; set; }
 
         // Computed properties for backward compatibility
         [NotMapped]
@@ -36,5 +31,6 @@ namespace QLDuLichRBAC_Upgrade.Models.Entities
 
         // Navigation properties
         public ICollection<NhanVien_Ca>? NhanVien_Ca { get; set; }
+        public ICollection<Ve>? Ve { get; set; }
     }
 }

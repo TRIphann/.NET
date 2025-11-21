@@ -51,8 +51,13 @@ namespace QLDuLichRBAC_Upgrade.Models.Entities
         [ForeignKey("MaGoi")]
         public GoiDichVu? GoiDichVu { get; set; }
 
+        [ForeignKey("MaCa")]
+        public Ca? Ca { get; set; }
+
+        [ForeignKey("MaHD")]
+        public HoaDon? HoaDon { get; set; }
+
         // Navigation properties
-        public ICollection<HoaDon>? HoaDon { get; set; }
         public ICollection<Ve_DichVuThem>? Ve_DichVuThem { get; set; }
     }
 }

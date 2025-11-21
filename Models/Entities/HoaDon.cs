@@ -11,10 +11,10 @@ namespace QLDuLichRBAC_Upgrade.Models.Entities
         public int MaHD { get; set; }
 
         [Required]
-        public int MaVe { get; set; }
+        public int MaKH { get; set; }
 
         [Required]
-        [Column("NgayLap")]
+        [Column("NgayTao")]
         public DateTime NgayTT { get; set; } = DateTime.Now;
 
         [Required]
@@ -23,21 +23,17 @@ namespace QLDuLichRBAC_Upgrade.Models.Entities
 
         [Required]
         [StringLength(50)]
-        [Column("PhuongThucThanhToan")]
-        public string HinhThucTT { get; set; } = "Tiền mặt";  // Tiền mặt, Chuyển khoản, Thẻ, Ví điện tử
+        public string HinhThucTT { get; set; } = "Tiền mặt";  // Tiền mặt, Chuyển khoản, QR Code, Thẻ
 
-        [StringLength(50)]
-        public string? TrangThai { get; set; } = "Đã thanh toán";  // Đã thanh toán, Chưa thanh toán, Đã hoàn tiền
+        [StringLength(20)]
+        [Column("TrangThaiTT")]
+        public string? TrangThai { get; set; } = "Đã thanh toán";  // Chờ thanh toán, Đã thanh toán, Đã hủy
+
+        [StringLength(100)]
+        public string? MaGiaoDich { get; set; }
 
         // Foreign Keys
-        [ForeignKey("MaVe")]
-        public Ve? Ve { get; set; }
-        
-        // Computed property for backward compatibility
-        [NotMapped]
-        public int MaKH => Ve?.MaKH ?? 0;
-        
-        [NotMapped]
-        public KhachHang? KhachHang => Ve?.KhachHang;
+        [ForeignKey("MaKH")]
+        public KhachHang? KhachHang { get; set; }
     }
 }
