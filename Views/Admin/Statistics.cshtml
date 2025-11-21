@@ -282,6 +282,122 @@
             transform: translateY(0);
         }
     }
+    
+    /* Staff Calendar Timeline Styles */
+    .calendar-timeline {
+        display: table;
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 900px;
+    }
+    .calendar-header {
+        display: table-row;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+    }
+    .calendar-header-cell {
+        display: table-cell;
+        padding: 15px 10px;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.2);
+        font-size: 13px;
+    }
+    .calendar-header-cell:first-child {
+        text-align: left;
+        padding-left: 20px;
+        min-width: 150px;
+        position: sticky;
+        left: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        z-index: 10;
+    }
+    .calendar-header-cell.today {
+        background: rgba(255, 193, 7, 0.3);
+        font-weight: 700;
+    }
+    .calendar-header-cell.selected {
+        background: rgba(67, 233, 123, 0.3);
+        font-weight: 700;
+    }
+    .calendar-row {
+        display: table-row;
+        transition: background 0.2s;
+    }
+    .calendar-row:hover {
+        background: #f8f9ff;
+    }
+    .calendar-cell {
+        display: table-cell;
+        padding: 12px 10px;
+        border: 1px solid #e0e0e0;
+        vertical-align: middle;
+        position: relative;
+        min-height: 60px;
+        background: white;
+    }
+    .calendar-cell:first-child {
+        font-weight: 600;
+        color: #333;
+        padding-left: 20px;
+        position: sticky;
+        left: 0;
+        background: white;
+        z-index: 5;
+        border-right: 2px solid #667eea;
+    }
+    .calendar-cell.today {
+        background: #fffbf0;
+    }
+    .calendar-cell.selected {
+        background: #f0fff4;
+    }
+    .shift-bar {
+        display: block;
+        padding: 8px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: white;
+        margin: 3px 0;
+        white-space: nowrap;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+        text-align: center;
+    }
+    .shift-bar:hover {
+        transform: translateX(3px);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+    .shift-bar.morning {
+        background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+    }
+    .shift-bar.afternoon {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .shift-bar.evening {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    .shift-bar.full-day {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    /* Ca đã trực - giữ màu gradient gốc */
+    .shift-bar.completed {
+        opacity: 1;
+        border-left: 4px solid rgba(255, 255, 255, 0.5);
+    }
+    /* Ca chưa điểm danh - mờ hơn */
+    .shift-bar.pending {
+        opacity: 0.7;
+        border-left: 4px dashed rgba(255, 255, 255, 0.5);
+    }
+    .calendar-cell {
+        min-height: 100px;
+    }
+    .loading-calendar {
+        animation: fadeIn 0.3s;
+    }
 </style>
 
 <div class="stats-container">
@@ -315,7 +431,7 @@
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <input type="date" 
                                id="startDatePicker" 
-                               value="@DateTime.Now.AddDays(-(int)DateTime.Now.DayOfWeek + 1).ToString("yyyy-MM-dd")" 
+                               value="" 
                                onchange="updateWeekChart(this.value)"
                                style="padding: 6px 10px; border-radius: 6px; border: 1px solid #667eea; font-size: 0.9em; cursor: pointer;" />
                         <button onclick="setToday()" style="padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85em;">
@@ -345,8 +461,10 @@
         
         async function updateWeekChart(startDate) {
             try {
+                console.log('Updating chart for week starting:', startDate);
                 const response = await fetch(`/Admin/GetWeeklyTickets?startDate=${startDate}`);
                 const data = await response.json();
+                console.log('Received data:', data);
                 
                 if (weekdayChartInstance) {
                     weekdayChartInstance.data.labels = data.map(d => d.day);
@@ -360,6 +478,12 @@
                 console.error('Error updating chart:', error);
             }
         }
+        
+        // Khởi tạo ngày hiện tại khi load trang
+        document.addEventListener('DOMContentLoaded', function() {
+            const monday = getMonday(new Date());
+            document.getElementById('startDatePicker').value = monday.toISOString().split('T')[0];
+        });
         </script>
 
         <h3 style="margin: 30px 0 15px;">Danh Sách Gói Dịch Vụ</h3>
@@ -395,29 +519,54 @@
         <div class="stats-cards">
             <div class="stat-card purple"><h3>Tổng Nhân Viên</h3><div class="value">@stats.TotalStaff</div><div class="label">Nhân viên</div></div>
             <div class="stat-card blue"><h3>Làm Việc Hôm Nay</h3><div class="value">@stats.ActiveToday</div><div class="label">Ca làm việc</div></div>
+            <div class="stat-card green"><h3>Nhân Viên Hoạt Động</h3><div class="value">@stats.ActiveStaff</div><div class="label">Trong kỳ</div></div>
         </div>
 
         <div class="charts-grid">
             <div class="chart-card"><h3>📊 Số Ca Theo Loại</h3><div class="chart-container"><canvas id="shiftTypeChart"></canvas></div></div>
-            <div class="chart-card"><h3>📅 Lịch Làm Việc 30 Ngày</h3><div class="chart-container"><canvas id="shiftCalendarChart"></canvas></div></div>
+            <div class="chart-card"><h3>👥 Phân Loại Giới Tính</h3><div class="chart-container"><canvas id="staffGenderChart"></canvas></div></div>
+            <div class="chart-card"><h3>✅ Trạng Thái Điểm Danh</h3><div class="chart-container"><canvas id="shiftStatusChart"></canvas></div></div>
+        </div>
+
+        <!-- Lịch Làm Việc Timeline -->
+        <div class="chart-card" style="margin-top: 30px;">
+            <h3 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span>📅 Lịch Làm Việc Theo Tuần</span>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="date" 
+                           id="staffWeekPicker" 
+                           value="" 
+                           onchange="updateStaffCalendar(this.value)"
+                           style="padding: 6px 10px; border-radius: 6px; border: 1px solid #667eea; font-size: 0.9em; cursor: pointer;" />
+                    <button onclick="setStaffToday()" style="padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85em;">
+                        📆 Hôm nay
+                    </button>
+                </div>
+            </h3>
+            <div id="staffCalendarContainer" style="overflow-x: auto; margin-top: 20px;">
+                <div class="loading-calendar" style="text-align: center; padding: 40px; color: #999;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p style="margin-top: 10px;">Đang tải lịch làm việc...</p>
+                </div>
+            </div>
         </div>
 
         <h3 style="margin: 30px 0 15px;">Danh Sách Nhân Viên</h3>
 
         <div class="data-table">
             <table>
-                <thead><tr><th>#</th><th>Họ Tên</th><th>SĐT</th><th>Email</th><th>Tổng Ca</th><th>Ca Tháng Này</th></tr></thead>
+                <thead><tr><th>#</th><th>Họ Tên</th><th>Giới Tính</th><th>SĐT</th><th>Số Ca</th><th>Ca Hoàn Thành</th></tr></thead>
                 <tbody>
                     @{ int j = 1; }
                     @foreach (var staff in stats.TopStaff)
                     {
                         <tr>
                             <td>@j</td>
-                            <td><strong>@staff.HoTen</strong></td>
+                            <td><strong>@staff.TenNV</strong></td>
+                            <td>@staff.GioiTinh</td>
                             <td>@staff.SDT</td>
-                            <td>@staff.Email</td>
                             <td>@staff.SoCa ca</td>
-                            <td><span class="badge badge-success">@staff.SoCaThang ca</span></td>
+                            <td><span class="badge badge-success">@staff.CaHoanThanh ca</span></td>
                         </tr>
                         j++;
                     }
@@ -430,20 +579,22 @@
         dynamic stats = ViewBag.CustomerStats;
         <div class="stats-cards">
             <div class="stat-card purple"><h3>Tổng Khách Hàng</h3><div class="value">@stats.TotalCustomers</div><div class="label">Khách hàng</div></div>
-            <div class="stat-card blue"><h3>Khách Hàng Hoạt Động</h3><div class="value">@stats.ActiveCustomers</div><div class="label">3 tháng gần nhất</div></div>
+            <div class="stat-card blue"><h3>Khách Hàng Hoạt Động</h3><div class="value">@stats.ActiveCustomers</div><div class="label">Trong kỳ</div></div>
         </div>
 
         <div class="charts-grid">
             <div class="chart-card"><h3>💰 Doanh Thu Theo Tháng</h3><div class="chart-container"><canvas id="customerRevenueChart"></canvas></div></div>
             <div class="chart-card"><h3>💳 Phương Thức Thanh Toán</h3><div class="chart-container"><canvas id="paymentMethodChart"></canvas></div></div>
             <div class="chart-card"><h3>👥 Số Khách Theo Tháng</h3><div class="chart-container"><canvas id="customerCountChart"></canvas></div></div>
+            <div class="chart-card"><h3>👥 Phân Loại Giới Tính</h3><div class="chart-container"><canvas id="customerGenderChart"></canvas></div></div>
+            <div class="chart-card"><h3>🎫 Trạng Thái Vé</h3><div class="chart-container"><canvas id="ticketStatusChart"></canvas></div></div>
         </div>
 
         <h3 style="margin: 30px 0 15px;">Danh Sách Khách Hàng</h3>
 
         <div class="data-table">
             <table>
-                <thead><tr><th>#</th><th>Tên Khách Hàng</th><th>SĐT</th><th>CCCD</th><th>Số Lần Mua</th><th>Tổng Chi Tiêu</th></tr></thead>
+                <thead><tr><th>#</th><th>Tên Khách Hàng</th><th>Giới Tính</th><th>SĐT</th><th>Số Vé</th><th>Tổng Chi Tiêu</th></tr></thead>
                 <tbody>
                     @{ int k = 1; }
                     @foreach (var customer in stats.TopCustomers)
@@ -451,9 +602,9 @@
                         <tr>
                             <td>@k</td>
                             <td><strong>@customer.TenKH</strong></td>
+                            <td>@customer.GioiTinh</td>
                             <td>@customer.SDT</td>
-                            <td>@customer.CCCD</td>
-                            <td>@customer.SoLanMua lần</td>
+                            <td>@customer.SoVe vé</td>
                             <td><strong>@string.Format("{0:N0}", customer.TongChiTieu) VNĐ</strong></td>
                         </tr>
                         k++;
@@ -652,6 +803,7 @@
         }
 
         const chartData = @Html.Raw(JsonSerializer.Serialize(currentTab == "packages" ? ViewBag.PackageStats : (currentTab == "staff" ? ViewBag.StaffStats : ViewBag.CustomerStats), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) }));
+        console.log('Tickets by Day data:', chartData.ticketsByDayOfWeek);
         
         @if (currentTab == "packages")
         {
@@ -710,17 +862,18 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
             
+            // Khởi tạo chart với dữ liệu trống, sẽ load sau
             weekdayChartInstance = new Chart(document.getElementById('weekdayChart'), {
                 type: 'bar',
                 data: {
-                    labels: chartData.ticketsByDayOfWeek.map(d => d.day),
+                    labels: [],
                     datasets: [{
                         label: 'Số vé',
-                        data: chartData.ticketsByDayOfWeek.map(d => d.count),
-                        backgroundColor: chartData.ticketsByDayOfWeek.map(d => d.isToday ? '#ffc107' : '#4facfe'),
+                        data: [],
+                        backgroundColor: '#4facfe',
                         borderRadius: 8,
-                        borderWidth: chartData.ticketsByDayOfWeek.map(d => d.isToday ? 3 : 0),
-                        borderColor: chartData.ticketsByDayOfWeek.map(d => d.isToday ? '#ff9800' : 'transparent')
+                        borderWidth: 0,
+                        borderColor: 'transparent'
                     }]
                 },
                 options: { 
@@ -749,24 +902,21 @@
                     }
                 }
             });
+            
+            // Load dữ liệu tuần hiện tại ngay sau khi khởi tạo chart
+            setTimeout(() => {
+                const monday = getMonday(new Date());
+                updateWeekChart(monday.toISOString().split('T')[0]);
+            }, 100);
             </text>
         }
         else if (currentTab == "staff")
         {
             <text>
-            new Chart(document.getElementById('staffRoleChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: chartData.staffByRole.map(r => r.role),
-                    datasets: [{ data: chartData.staffByRole.map(r => r.count), backgroundColor: ['#667eea', '#4facfe', '#43e97b', '#fa709a'], borderWidth: 0 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-            });
-            
             new Chart(document.getElementById('staffGenderChart'), {
                 type: 'pie',
                 data: {
-                    labels: chartData.staffByGender.map(g => g.gender),
+                    labels: chartData.staffByGender.map(g => g.gioiTinh),
                     datasets: [{ data: chartData.staffByGender.map(g => g.count), backgroundColor: ['#667eea', '#fa709a', '#43e97b'], borderWidth: 0 }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
@@ -802,6 +952,114 @@
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
+            
+            new Chart(document.getElementById('shiftStatusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: chartData.shiftsByStatus.map(s => s.trangThai),
+                    datasets: [{ data: chartData.shiftsByStatus.map(s => s.count), backgroundColor: ['#43e97b', '#ffc107', '#f44336'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+            
+            // Staff Calendar Functions
+            let selectedDate = null;
+            
+            function setStaffToday() {
+                const today = new Date();
+                document.getElementById('staffWeekPicker').value = today.toISOString().split('T')[0];
+                updateStaffCalendar(today.toISOString().split('T')[0]);
+            }
+            
+            async function updateStaffCalendar(startDate) {
+                try {
+                    const container = document.getElementById('staffCalendarContainer');
+                    container.innerHTML = '<div class="loading-calendar" style="text-align: center; padding: 40px; color: #999;"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top: 10px;">Đang tải lịch làm việc...</p></div>';
+                    
+                    const response = await fetch(`/Admin/GetStaffWeeklySchedule?startDate=${startDate}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        renderStaffCalendar(data);
+                    } else {
+                        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44336;">Lỗi: ' + data.error + '</div>';
+                    }
+                } catch (error) {
+                    console.error('Error loading staff calendar:', error);
+                    document.getElementById('staffCalendarContainer').innerHTML = '<div style="text-align: center; padding: 40px; color: #f44336;">Lỗi khi tải dữ liệu</div>';
+                }
+            }
+            
+            function renderStaffCalendar(data) {
+                const container = document.getElementById('staffCalendarContainer');
+                
+                let html = '<div class="calendar-timeline">';
+                
+                // Header row
+                html += '<div class="calendar-header">';
+                html += '<div class="calendar-header-cell">Nhân Viên</div>';
+                data.weekDays.forEach(day => {
+                    const classes = [];
+                    if (day.isToday) classes.push('today');
+                    if (selectedDate === day.date) classes.push('selected');
+                    html += `<div class="calendar-header-cell ${classes.join(' ')}" onclick="selectDate('${day.date}')">
+                        <div>${day.dayName}</div>
+                        <div style="font-size: 12px; font-weight: 400;">${day.dayMonth}</div>
+                    </div>`;
+                });
+                html += '</div>';
+                
+                // Staff rows
+                data.scheduleData.forEach(staff => {
+                    html += '<div class="calendar-row">';
+                    html += `<div class="calendar-cell"><strong>${staff.tenNV}</strong></div>`;
+                    
+                    staff.weekData.forEach((day, index) => {
+                        const dayInfo = data.weekDays[index];
+                        const classes = [];
+                        if (dayInfo.isToday) classes.push('today');
+                        if (selectedDate === day.date) classes.push('selected');
+                        
+                        html += `<div class="calendar-cell ${classes.join(' ')}">`;
+                        
+                        if (day.shifts && day.shifts.length > 0) {
+                            day.shifts.forEach(shift => {
+                                const statusClass = shift.trangThai === 'Đã điểm danh' ? 'completed' : 'pending';
+                                html += `<div class="shift-bar ${shift.shiftType} ${statusClass}" title="${shift.tenCa}: ${shift.gioBatDau}-${shift.gioKetThuc} (${shift.trangThai})">
+                                    ${shift.gioBatDau}-${shift.gioKetThuc}
+                                </div>`;
+                            });
+                        }
+                        
+                        html += '</div>';
+                    });
+                    
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+                container.innerHTML = html;
+            }
+            
+            function selectDate(date) {
+                selectedDate = selectedDate === date ? null : date;
+                const startDate = document.getElementById('staffWeekPicker').value;
+                updateStaffCalendar(startDate);
+            }
+            
+            // Initialize calendar immediately if container exists
+            setTimeout(function() {
+                const container = document.getElementById('staffCalendarContainer');
+                const picker = document.getElementById('staffWeekPicker');
+                if (container && picker) {
+                    console.log('Initializing staff calendar...');
+                    const today = new Date();
+                    picker.value = today.toISOString().split('T')[0];
+                    updateStaffCalendar(today.toISOString().split('T')[0]);
+                } else {
+                    console.log('Staff calendar container not found');
+                }
+            }, 500);
             </text>
         }
         else if (currentTab == "customers")
@@ -810,7 +1068,7 @@
             new Chart(document.getElementById('customerGenderChart'), {
                 type: 'pie',
                 data: {
-                    labels: chartData.customersByGender.map(g => g.gender),
+                    labels: chartData.customersByGender.map(g => g.gioiTinh),
                     datasets: [{ data: chartData.customersByGender.map(g => g.count), backgroundColor: ['#667eea', '#fa709a', '#43e97b'], borderWidth: 0 }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
@@ -854,6 +1112,15 @@
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            
+            new Chart(document.getElementById('ticketStatusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: chartData.ticketsByStatus.map(t => t.trangThai),
+                    datasets: [{ data: chartData.ticketsByStatus.map(t => t.count), backgroundColor: ['#43e97b', '#ffc107', '#f44336', '#2196f3'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
             </text>
         }

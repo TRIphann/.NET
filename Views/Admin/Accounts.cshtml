@@ -9,6 +9,56 @@
     int totalPages = ViewBag.TotalPages ?? 1;
 }
 
+<style>
+    /* Tắt tất cả animation và transition */
+    *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+    
+    /* Avatar placeholder */
+    .avatar-placeholder {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+    }
+    
+    .avatar-small {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    /* Ngăn table layout shift */
+    table {
+        table-layout: fixed;
+        width: 100%;
+    }
+    
+    table td, table th {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    /* Fix width cho các cột */
+    table th:nth-child(1), table td:nth-child(1) { width: 60px; }
+    table th:nth-child(2), table td:nth-child(2) { width: 80px; }
+    table th:nth-child(3), table td:nth-child(3) { width: 180px; }
+    table th:nth-child(4), table td:nth-child(4) { width: 100px; }
+    table th:nth-child(5), table td:nth-child(5) { width: 120px; }
+    table th:nth-child(6), table td:nth-child(6) { width: 120px; }
+    table th:nth-child(7), table td:nth-child(7) { width: 80px; }
+    table th:nth-child(8), table td:nth-child(8) { width: 150px; }
+</style>
+
 <h1><i class="fas fa-users-cog"></i> Quản lý tài khoản</h1>
 
 <!-- Top Navigation -->
@@ -58,14 +108,22 @@
             {
             <tr>
                 <td>
-                    <img src="~/@(emp.AnhDaiDien ?? "images/avatars/default.jpg")"
-                         alt="@emp.HoTen"
-                         class="avatar-small"
-                         loading="lazy"
-                         onerror="this.src='/images/avatars/default.jpg'" />
+                    @if (!string.IsNullOrEmpty(emp.AnhDaiDien))
+                    {
+                        <img src="~/@emp.AnhDaiDien"
+                             alt="@emp.TenNV"
+                             class="avatar-small"
+                             loading="lazy" />
+                    }
+                    else
+                    {
+                        <div class="avatar-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    }
                 </td>
                 <td>#@emp.MaNV</td>
-                <td>@emp.HoTen</td>
+                <td>@emp.TenNV</td>
                 <td>@emp.GioiTinh</td>
                 <td>@emp.SDT</td>
                 <td>@(emp.Username ?? "N/A")</td>
@@ -74,12 +132,9 @@
                     <button class="btn btn-sm btn-primary" onclick="viewEmployeeDetail(@emp.MaNV)">
                         <i class="fas fa-eye"></i> Xem
                     </button>
-                    @if (emp.UserId != null)
-                    {
-                    <button class="btn btn-sm btn-danger" onclick="deleteAccount(@emp.UserId)">
+                    <button class="btn btn-sm btn-danger" onclick="deleteEmployee(@emp.MaNV, '@emp.TenNV', @(emp.UserId?.ToString() ?? "null"))">
                         <i class="fas fa-trash"></i> Xóa
                     </button>
-                    }
                 </td>
             </tr>
             }
@@ -122,7 +177,7 @@ else if (currentTab == "customers")
                 <th>Giới tính</th>
                 <th>SĐT</th>
                 <th>Username</th>
-                <th>Số tour</th>
+                <th>Số vé</th>
                 <th>Hành động</th>
             </tr>
         </thead>
@@ -131,28 +186,33 @@ else if (currentTab == "customers")
             {
             <tr>
                 <td>
-                    <img src="~/@(cust.AnhDaiDien ?? "images/avatars/default.jpg")"
-                         alt="@cust.TenKH"
-                         class="avatar-small"
-                         loading="lazy"
-                         onerror="this.src='/images/avatars/default.jpg'" />
+                    @if (!string.IsNullOrEmpty(cust.AnhDaiDien))
+                    {
+                        <img src="~/@cust.AnhDaiDien"
+                             alt="@cust.TenKH"
+                             class="avatar-small"
+                             loading="lazy" />
+                    }
+                    else
+                    {
+                        <div class="avatar-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    }
                 </td>
                 <td>#@cust.MaKH</td>
                 <td>@cust.TenKH</td>
                 <td>@cust.GioiTinh</td>
                 <td>@cust.SDT</td>
                 <td>@(cust.Username ?? "N/A")</td>
-                <td>@cust.SoTour</td>
+                <td>@cust.SoVe</td>
                 <td>
                     <button class="btn btn-sm btn-primary" onclick="viewCustomerDetail(@cust.MaKH)">
                         <i class="fas fa-eye"></i> Xem
                     </button>
-                    @if (cust.UserId != null)
-                    {
-                    <button class="btn btn-sm btn-danger" onclick="deleteAccount(@cust.UserId)">
+                    <button class="btn btn-sm btn-danger" onclick="deleteCustomer(@cust.MaKH, '@cust.TenKH', @(cust.UserId?.ToString() ?? "null"))">
                         <i class="fas fa-trash"></i> Xóa
                     </button>
-                    }
                 </td>
             </tr>
             }
@@ -297,28 +357,27 @@ else if (currentTab == "customers")
                 if (result.success) {
                     const empData = result.data;
                     
-                    let toursHtml = '<h4 style="margin-top: 20px;"><i class="fas fa-map-marked-alt"></i> Các tour đã đăng ký:</h4>';
-                    if (empData.tours && empData.tours.length > 0) {
-                        toursHtml += '<table style="width: 100%; margin-top: 10px;"><thead><tr><th>Tên tour</th><th>Ngày khởi hành</th><th>Giá</th></tr></thead><tbody>';
-                        empData.tours.forEach(tour => {
-                            const ngayKH = new Date(tour.ngayBatDau).toLocaleDateString('vi-VN');
-                            toursHtml += `<tr><td>${tour.tenTour}</td><td>${ngayKH}</td><td>${tour.gia.toLocaleString('vi-VN')} ₫</td></tr>`;
+                    let shiftsHtml = '<h4 style="margin-top: 20px;"><i class="fas fa-calendar-check"></i> Lịch làm việc gần đây:</h4>';
+                    if (empData.recentShifts && empData.recentShifts.length > 0) {
+                        shiftsHtml += '<table style="width: 100%; margin-top: 10px;"><thead><tr><th>Ca</th><th>Ngày Làm Việc</th><th>Trạng Thái</th></tr></thead><tbody>';
+                        empData.recentShifts.forEach(shift => {
+                            const ngayLV = new Date(shift.ngayLamViec).toLocaleDateString('vi-VN');
+                            shiftsHtml += `<tr><td>${shift.tenCa || 'N/A'}</td><td>${ngayLV}</td><td>${shift.trangThai}</td></tr>`;
                         });
-                        toursHtml += '</tbody></table>';
+                        shiftsHtml += '</tbody></table>';
                     } else {
-                        toursHtml += '<p>Chưa đăng ký tour nào</p>';
+                        shiftsHtml += '<p>Chưa có ca làm việc nào</p>';
                     }
 
                     const html = `
                         <div class="detail-card">
                             <div class="detail-header">
                                 <img src="/images/${empData.anhDaiDien || 'avatars/default.jpg'}"
-                                     alt="${empData.hoTen}"
+                                     alt="${empData.tenNV}"
                                      class="detail-avatar"
                                      onerror="this.src='/images/avatars/default.jpg'" />
                                 <div class="detail-info">
-                                    <h2>${empData.hoTen}</h2>
-                                    <p><i class="fas fa-briefcase"></i> ${empData.vaiTro || 'Nhân viên'}</p>
+                                    <h2>${empData.tenNV}</h2>
                                     <p><i class="fas fa-user-circle"></i> Username: ${empData.username || 'N/A'}</p>
                                 </div>
                             </div>
@@ -338,7 +397,7 @@ else if (currentTab == "customers")
                                 <span class="info-label"><i class="fas fa-list"></i> Số ca:</span>
                                 <span class="info-value">${empData.soCa}</span>
                             </div>
-                            ${toursHtml}
+                            ${shiftsHtml}
                         </div>
                     `;
 
@@ -371,16 +430,16 @@ else if (currentTab == "customers")
                 if (result.success) {
                     const custData = result.data;
                     
-                    let toursHtml = '<h4 style="margin-top: 20px;"><i class="fas fa-map-marked-alt"></i> Các tour đã đăng ký:</h4>';
-                    if (custData.tours && custData.tours.length > 0) {
-                        toursHtml += '<table style="width: 100%; margin-top: 10px;"><thead><tr><th>Tên tour</th><th>Ngày khởi hành</th><th>Số vé</th><th>Giá</th></tr></thead><tbody>';
-                        custData.tours.forEach(tour => {
-                            const ngayKH = new Date(tour.ngayBatDau).toLocaleDateString('vi-VN');
-                            toursHtml += `<tr><td>${tour.tenTour}</td><td>${ngayKH}</td><td>${tour.soLuongVe}</td><td>${tour.gia.toLocaleString('vi-VN')} ₫</td></tr>`;
+                    let ticketsHtml = '<h4 style="margin-top: 20px;"><i class="fas fa-ticket-alt"></i> Các vé đã mua:</h4>';
+                    if (custData.recentTickets && custData.recentTickets.length > 0) {
+                        ticketsHtml += '<table style="width: 100%; margin-top: 10px;"><thead><tr><th>Mã Vé</th><th>Gói Dịch Vụ</th><th>Ngày Mua</th><th>Trạng Thái</th><th>Giá</th></tr></thead><tbody>';
+                        custData.recentTickets.forEach(ticket => {
+                            const ngayMua = new Date(ticket.ngayMua).toLocaleDateString('vi-VN');
+                            ticketsHtml += `<tr><td>#${ticket.maVe}</td><td>${ticket.tenGoi || 'N/A'}</td><td>${ngayMua}</td><td>${ticket.trangThai}</td><td>${ticket.giaVe.toLocaleString('vi-VN')} ₫</td></tr>`;
                         });
-                        toursHtml += '</tbody></table>';
+                        ticketsHtml += '</tbody></table>';
                     } else {
-                        toursHtml += '<p>Chưa đăng ký tour nào</p>';
+                        ticketsHtml += '<p>Chưa mua vé nào</p>';
                     }
 
                     const html = `
@@ -408,10 +467,10 @@ else if (currentTab == "customers")
                                 <span class="info-value">${custData.diaChi || 'N/A'}</span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label"><i class="fas fa-list"></i> Số tour:</span>
-                                <span class="info-value">${custData.soTour}</span>
+                                <span class="info-label"><i class="fas fa-list"></i> Số vé:</span>
+                                <span class="info-value">${custData.soVe}</span>
                             </div>
-                            ${toursHtml}
+                            ${ticketsHtml}
                         </div>
                     `;
 
@@ -430,7 +489,51 @@ else if (currentTab == "customers")
         document.getElementById('customerDetailModal').style.display = 'none';
     }
 
-    // Xóa tài khoản
+    // Xóa nhân viên
+    function deleteEmployee(maNV, tenNV, userId) {
+        if (!confirm(`Bạn có chắc muốn xóa nhân viên "${tenNV}"?\n\nLưu ý: Thông tin nhân viên và lịch làm việc sẽ bị xóa vĩnh viễn!`)) return;
+
+        $.ajax({
+            url: '@Url.Action("DeleteEmployee", "Admin")',
+            type: 'POST',
+            data: { maNV: maNV, userId: userId },
+            success: function(result) {
+                if (result.success) {
+                    alert('✅ ' + result.message);
+                    location.reload();
+                } else {
+                    alert('❌ ' + result.message);
+                }
+            },
+            error: function() {
+                alert('❌ Có lỗi xảy ra khi xóa nhân viên!');
+            }
+        });
+    }
+
+    // Xóa khách hàng
+    function deleteCustomer(maKH, tenKH, userId) {
+        if (!confirm(`Bạn có chắc muốn xóa khách hàng "${tenKH}"?\n\nLưu ý: Thông tin khách hàng sẽ bị xóa vĩnh viễn!`)) return;
+
+        $.ajax({
+            url: '@Url.Action("DeleteCustomer", "Admin")',
+            type: 'POST',
+            data: { maKH: maKH, userId: userId },
+            success: function(result) {
+                if (result.success) {
+                    alert('✅ ' + result.message);
+                    location.reload();
+                } else {
+                    alert('❌ ' + result.message);
+                }
+            },
+            error: function() {
+                alert('❌ Có lỗi xảy ra khi xóa khách hàng!');
+            }
+        });
+    }
+
+    // Xóa tài khoản (legacy - giữ lại để tương thích)
     function deleteAccount(userId) {
         if (!confirm('Bạn có chắc muốn xóa tài khoản này?')) return;
 
